@@ -28,13 +28,12 @@ const cannedReply = (text: string) => {
 };
 
 export default function ChatWidget() {
-  const { open, setOpen, resource, apiKey, setApiKey, initialQuestion, setInitialQuestion } = useChat();
+  const { open, setOpen, resource, apiKey, initialQuestion, setInitialQuestion } = useChat();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Hi! How can I help you find support today?" },
   ]);
   const [loading, setLoading] = useState(false);
-  const [tempKey, setTempKey] = useState(apiKey ?? "");
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastResourceIdRef = useRef<string | null>(null);
 
@@ -148,18 +147,6 @@ export default function ChatWidget() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            {!apiKey && (
-              <div className="px-3 py-2 border-b bg-muted/30 flex gap-2">
-                <Input
-                  placeholder="Enter Gemini API key"
-                  value={tempKey}
-                  onChange={(e) => setTempKey(e.target.value)}
-                />
-                <Button size="sm" onClick={() => setApiKey(tempKey || null)} disabled={!tempKey}>
-                  Save
-                </Button>
-              </div>
-            )}
             <div className="max-h-80 overflow-y-auto p-3 space-y-2 bg-background/95">
               {messages.map((m, i) => (
                 <div key={i} className={`text-sm ${m.role === "user" ? "text-foreground" : "text-muted-foreground"}`}>
