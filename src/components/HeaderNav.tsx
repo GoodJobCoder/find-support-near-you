@@ -26,6 +26,9 @@ const HeaderNav = () => {
           <NavLink to="/help" className={getLinkClass}>
             {t('nav.help')}
           </NavLink>
+          <NavLink to="/laws" className={getLinkClass}>
+            Laws
+          </NavLink>
         </div>
       </div>
     </nav>

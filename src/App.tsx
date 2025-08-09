@@ -11,6 +11,7 @@ import HeaderNav from "./components/HeaderNav";
 import { GoogleMapsProvider } from "./hooks/useGoogleMaps";
 import { ChatProvider } from "./context/ChatContext";
 import { LanguageProvider } from "./context/LanguageContext";
+import Laws from "./pages/Laws";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -27,6 +28,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/help" element={<HelpCenter />} />
+                <Route path="/laws" element={<Laws />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
