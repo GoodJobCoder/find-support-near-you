@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Send, MessageSquare, X } from "lucide-react";
+import { useChat } from "@/context/ChatContext";
 
 interface Message {
   role: "user" | "assistant";
@@ -27,16 +28,40 @@ const cannedReply = (text: string) => {
 };
 
 export default function ChatWidget() {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, resource, apiKey, setApiKey, initialQuestion, setInitialQuestion } = useChat();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Hi! How can I help you find support today?" },
   ]);
+  const [loading, setLoading] = useState(false);
+  const [tempKey, setTempKey] = useState(apiKey ?? "");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const lastResourceIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
+
+  useEffect(() => {
+    if (open && resource && resource.id !== lastResourceIdRef.current) {
+      lastResourceIdRef.current = resource.id;
+      const parts = [
+        resource.name,
+        resource.address,
+        [resource.city, resource.state, resource.country].filter(Boolean).join(", "),
+        resource.phone ? `Phone: ${resource.phone}` : null,
+        resource.website ? `Website: ${resource.website}` : null,
+      ].filter(Boolean) as string[];
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: `You opened: ${parts.join(" · ")}. Ask me anything about this location.` },
+      ]);
+    }
+    if (open && initialQuestion) {
+      setInput(initialQuestion);
+      setInitialQuestion(null);
+    }
+  }, [open, resource]);
 
   const handleSend = () => {
     const text = input.trim();
