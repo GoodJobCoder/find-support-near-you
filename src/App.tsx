@@ -4,8 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import HelpCenter from "./pages/HelpCenter";
 import NotFound from "./pages/NotFound";
 import ChatWidget from "./components/ChatWidget";
+import HeaderNav from "./components/HeaderNav";
 import { GoogleMapsProvider } from "./hooks/useGoogleMaps";
 import { ChatProvider } from "./context/ChatContext";
 const queryClient = new QueryClient();
@@ -19,8 +21,10 @@ const App = () => (
           <Sonner />
           <ChatWidget />
           <BrowserRouter>
+            <HeaderNav />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/help" element={<HelpCenter />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
