@@ -42,7 +42,7 @@ export default function ChatWidget() {
   }, [messages, open]);
 
   useEffect(() => {
-    if (open && resource && resource.id !== lastResourceIdRef.current) {
+    if (open && resource) {
       lastResourceIdRef.current = resource.id;
       const parts = [
         resource.name,
@@ -51,8 +51,9 @@ export default function ChatWidget() {
         resource.phone ? `Phone: ${resource.phone}` : null,
         resource.website ? `Website: ${resource.website}` : null,
       ].filter(Boolean) as string[];
-      setMessages((m) => [
-        ...m,
+      setInput("");
+      setMessages([
+        { role: "assistant", content: "Hi! How can I help you find support today?" },
         { role: "assistant", content: `You opened: ${parts.join(" · ")}. Ask me anything about this location.` },
       ]);
     }
