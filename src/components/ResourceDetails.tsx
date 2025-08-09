@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import AvailabilityStatus from "./AvailabilityStatus";
 import TransportationOptions from "./TransportationOptions";
-import ReviewSystem from "./ReviewSystem";
 
 export default function ResourceDetails({ resource }: { resource: Resource & { distance?: number } }) {
   const { openWith } = useChat();
@@ -102,11 +101,6 @@ export default function ResourceDetails({ resource }: { resource: Resource & { d
         lat={resource.lat}
         lng={resource.lng}
       />
-
-      {/* Reviews System */}
-      <div className="border-t pt-6">
-        <ReviewSystem resourceId={resource.id} resourceName={resource.name} />
-      </div>
 
       <div className="rounded-md border p-3 text-sm text-muted-foreground">
         Tip: Information may change. Please contact the organization to confirm details.
