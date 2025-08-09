@@ -39,6 +39,7 @@ export default function SupportSearch() {
   const [radius, setRadius] = useState<number>(25);
   const [userLoc, setUserLoc] = useState<LatLng | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"address" | "zipcode" | "city">("address");
 
   const doGeolocate = useCallback(() => {
     if (!("geolocation" in navigator)) {
@@ -106,13 +107,25 @@ export default function SupportSearch() {
           <CardTitle className="text-2xl">Search nearby support</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <div className="grid gap-3 sm:grid-cols-[auto,1fr,auto]">
+            <div className="w-full sm:w-44">
+              <Select value={mode} onValueChange={(v) => setMode(v as any)}>
+                <SelectTrigger aria-label="Search by" className="w-full">
+                  <SelectValue placeholder="Search by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="address">Address</SelectItem>
+                  <SelectItem value="zipcode">ZIP code</SelectItem>
+                  <SelectItem value="city">City</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="relative">
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="City, postcode, or address"
-                aria-label="Location"
+                placeholder={mode === 'address' ? 'Enter address (e.g., 123 Main St)' : mode === 'zipcode' ? 'ZIP / Postcode (e.g., 10001)' : 'City (e.g., Boston)'}
+                aria-label={mode === 'address' ? 'Address' : mode === 'zipcode' ? 'ZIP code' : 'City'}
                 className="pr-10"
               />
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -166,7 +179,8 @@ export default function SupportSearch() {
         </CardContent>
       </Card>
 
-      <div className="mt-8">
+      <section aria-labelledby="results-heading" className="mt-8" role="region">
+        <h2 id="results-heading" className="sr-only">Search results</h2>
         {userLoc ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -188,11 +202,13 @@ export default function SupportSearch() {
             )}
           </div>
         ) : (
-          <div className="text-sm text-muted-foreground">
-            Results will appear here after you set a location.
-          </div>
+          <Card className="border-dashed">
+            <CardContent className="py-8 text-center text-muted-foreground">
+              Results will appear here after you set a location.
+            </CardContent>
+          </Card>
         )}
-      </div>
+      </section>
 
       <p className="mt-8 text-xs text-muted-foreground">
         Disclaimer: Information is provided as a convenience and may change. Please contact organizations directly to confirm details.
