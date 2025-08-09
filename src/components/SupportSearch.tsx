@@ -183,36 +183,74 @@ export default function SupportSearch() {
 
       const allResults = await Promise.all(promises);
       
-      // Process results and convert to our Resource format
+      // Collect unique place IDs to get detailed information
+      const uniquePlaces = new Map<string, { place: google.maps.places.PlaceResult; category: ResourceCategory }>();
+      
       allResults.forEach((categoryResults, categoryIndex) => {
         const category = searchQueries[categoryIndex].category;
         categoryResults.forEach(keywordResults => {
           keywordResults.forEach(place => {
             if (place.place_id && place.geometry?.location && place.name) {
-              // Avoid duplicates
-              if (!newResources.find(r => r.id === place.place_id)) {
-                newResources.push({
-                  id: place.place_id,
-                  name: place.name,
-                  category: category,
-                  lat: place.geometry.location.lat(),
-                  lng: place.geometry.location.lng(),
-                  address: place.formatted_address || "",
-                  city: place.vicinity || "",
-                  country: "Unknown",
-                  phone: undefined,
-                  website: undefined
-                });
+              if (!uniquePlaces.has(place.place_id)) {
+                uniquePlaces.set(place.place_id, { place, category });
               }
             }
           });
         });
       });
 
-      setResources(newResources);
+      // Fetch detailed information for each unique place
+      const detailPromises = Array.from(uniquePlaces.entries()).map(([placeId, { place, category }]) =>
+        new Promise<Resource | null>((resolve) => {
+          const request: google.maps.places.PlaceDetailsRequest = {
+            placeId: placeId,
+            fields: [
+              'place_id', 'name', 'formatted_address', 'vicinity', 
+              'formatted_phone_number', 'website', 'geometry', 
+              'opening_hours', 'rating', 'business_status'
+            ]
+          };
+
+          service.getDetails(request, (placeDetails, status) => {
+            if (status === window.google.maps.places.PlacesServiceStatus.OK && placeDetails) {
+              resolve({
+                id: placeDetails.place_id || placeId,
+                name: placeDetails.name || place.name,
+                category: category,
+                lat: placeDetails.geometry?.location?.lat() || place.geometry!.location!.lat(),
+                lng: placeDetails.geometry?.location?.lng() || place.geometry!.location!.lng(),
+                address: placeDetails.formatted_address || place.formatted_address || "",
+                city: placeDetails.vicinity || place.vicinity || "",
+                country: "United States", // Most results will be US-based
+                phone: placeDetails.formatted_phone_number || undefined,
+                website: placeDetails.website || undefined
+              });
+            } else {
+              // Fallback to basic info if details fetch fails
+              resolve({
+                id: place.place_id!,
+                name: place.name!,
+                category: category,
+                lat: place.geometry!.location!.lat(),
+                lng: place.geometry!.location!.lng(),
+                address: place.formatted_address || "",
+                city: place.vicinity || "",
+                country: "United States",
+                phone: undefined,
+                website: undefined
+              });
+            }
+          });
+        })
+      );
+
+      const detailedResults = await Promise.all(detailPromises);
+      const validResources = detailedResults.filter((resource): resource is Resource => resource !== null);
+
+      setResources(validResources);
       toast({ 
         title: "Places loaded", 
-        description: `Found ${newResources.length} nearby resources.` 
+        description: `Found ${validResources.length} nearby resources with detailed information.` 
       });
     } catch (error) {
       console.error("Error fetching places:", error);
