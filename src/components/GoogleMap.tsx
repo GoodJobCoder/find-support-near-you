@@ -190,23 +190,23 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
       <div ref={mapRef} className="w-full h-full" />
       
       {/* Map Legend */}
-      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-        <h4 className="font-semibold text-sm mb-2">Categories</h4>
+      <div className="absolute top-4 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
+        <h4 className="font-semibold text-sm mb-2 text-foreground">Categories</h4>
         <div className="space-y-1">
           {Object.entries(categoryColors).map(([category, color]) => (
             <div key={category} className="flex items-center gap-2">
               <div 
-                className="w-3 h-3 rounded-full border-2 border-white"
+                className="w-3 h-3 rounded-full border-2 border-border"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-xs">{category}</span>
+              <span className="text-xs text-foreground">{category}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Current Location Indicator */}
-      <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+      <div className="absolute bottom-4 right-4 bg-background/95 backdrop-blur-sm rounded-lg p-2 shadow-lg border">
         <div className="flex items-center gap-2">
           <Navigation className="w-4 h-4 text-primary" />
           <span className="text-xs font-medium">Your Location</span>
