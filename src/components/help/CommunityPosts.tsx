@@ -3,7 +3,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { FirecrawlService } from '@/utils/FirecrawlService';
+
 
 interface PostItem {
   title: string;
@@ -14,15 +14,12 @@ interface PostItem {
 
 export const CommunityPosts = () => {
   const { t } = useLanguage();
-  const [apiKey, setApiKey] = useState<string>(FirecrawlService.getApiKey() || '');
+  
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [posts, setPosts] = useState<PostItem[]>([]);
 
-  const saveKey = () => {
-    if (apiKey.trim()) FirecrawlService.saveApiKey(apiKey.trim());
-  };
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -30,23 +27,37 @@ export const CommunityPosts = () => {
     setPosts([]);
 
     try {
-      const q = encodeURIComponent(`${query} clinical trials cancer`);
-      const sources = [
-        { source: 'Reddit', url: `https://www.reddit.com/r/cancer/search/?q=${q}&restrict_sr=1&sort=new` },
-        { source: 'Reddit', url: `https://www.reddit.com/search/?q=${q}&type=link&sort=new` },
-        { source: 'Cancer Subreddit', url: `https://www.reddit.com/r/cancer/top/?t=month` },
+      const q = encodeURIComponent(`${query} clinical trials cancer`.trim());
+      const endpoints = [
+        `https://www.reddit.com/r/cancer/search.json?q=${q}&restrict_sr=1&sort=new&limit=10`,
+        `https://www.reddit.com/search.json?q=${q}&type=link&sort=new&limit=10`,
+        `https://www.reddit.com/r/cancer/top.json?t=month&limit=10`,
       ];
 
+      const fetchJson = async (url: string) => {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error('Failed to fetch');
+        return r.json();
+      };
+
+      const datasets = await Promise.allSettled(endpoints.map(fetchJson));
       const results: PostItem[] = [];
-      for (const s of sources) {
-        const res = await FirecrawlService.crawlWebsite(s.url);
-        if (res.success && res.data && (res.data as any).data) {
-          const dataArr = (res.data as any).data as any[];
-          dataArr.slice(0, 5).forEach((item: any) => {
-            const title = item.metadata?.title || 'Post';
-            const text = item.markdown || item.html || '';
-            const excerpt = (text as string).slice(0, 240).replace(/\s+/g, ' ') + '...';
-            results.push({ title, url: item.url || s.url, excerpt, source: s.source });
+      const seen = new Set<string>();
+
+      for (const ds of datasets) {
+        if (ds.status === 'fulfilled') {
+          const children = ds.value?.data?.children || [];
+          children.forEach((child: any) => {
+            const d = child.data || {};
+            const id = d.id as string;
+            if (!id || seen.has(id)) return;
+            seen.add(id);
+            const title = d.title || 'Post';
+            const permalink = d.permalink ? `https://www.reddit.com${d.permalink}` : (d.url_overridden_by_dest || '');
+            const text: string = d.selftext || '';
+            const excerpt = ((text && text.length > 0 ? text : title) as string).slice(0, 240).replace(/\s+/g, ' ') + '...';
+            const source = d.subreddit_name_prefixed || 'Reddit';
+            results.push({ title, url: permalink, excerpt, source });
           });
         }
       }
@@ -61,23 +72,13 @@ export const CommunityPosts = () => {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 grid gap-3 md:grid-cols-[1fr_auto] items-center">
-        <div className="grid gap-2 md:grid-cols-2">
-          <Input
-            placeholder={t('community.api_key_placeholder')}
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-          />
-          <Button onClick={saveKey} variant="secondary">{t('community.save_key')}</Button>
-        </div>
-        <div className="grid gap-2 md:grid-cols-[1fr_auto] md:pl-4">
-          <Input
-            placeholder={t('community.query_placeholder')}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <Button onClick={fetchPosts}>{loading ? t('shared.loading') : t('community.fetch')}</Button>
-        </div>
+      <Card className="p-4 grid gap-2 md:grid-cols-[1fr_auto] items-center">
+        <Input
+          placeholder={t('community.query_placeholder')}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <Button onClick={fetchPosts}>{loading ? t('shared.loading') : t('community.fetch')}</Button>
       </Card>
 
       {error && (
