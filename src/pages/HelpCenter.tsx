@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { ClinicalTrialsHub } from "@/components/help/ClinicalTrialsHub";
 
 const HelpCenter = () => {
   const { t } = useLanguage();
@@ -116,7 +115,6 @@ const HelpCenter = () => {
             </p>
           </article>
         </section>
-        <ClinicalTrialsHub />
       </main>
     </div>
   );
