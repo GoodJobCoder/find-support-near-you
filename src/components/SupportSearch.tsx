@@ -8,12 +8,13 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { Resource, ResourceCategory } from "@/data/resources";
-import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone } from "lucide-react";
+import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ResourceDetails from "@/components/ResourceDetails";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GoogleMap from "./GoogleMap";
 import MapToggle from "./MapToggle";
+import { useChat } from "@/context/ChatContext";
 
 interface LatLng { lat: number; lng: number }
 
@@ -441,6 +442,9 @@ function ResourceCard({
   isSelected?: boolean;
   onSelect?: () => void;
 }) {
+  const { openWith } = useChat();
+  const navigate = useNavigate();
+
   return (
     <Card 
       className={`group border border-border/70 hover:border-primary/60 transition-all duration-300 hover:shadow-md cursor-pointer ${
@@ -487,6 +491,29 @@ function ResourceCard({
           >
             Open in Maps <ExternalLink className="h-4 w-4" />
           </a>
+        </div>
+        <div className="pt-1">
+          <Button size="sm" variant="secondary" onClick={(e) => {
+            e.stopPropagation();
+            openWith({
+              resource: {
+                id: (resource as any).id,
+                name: resource.name,
+                category: String((resource as any).category ?? ""),
+                address: resource.address,
+                city: resource.city,
+                state: (resource as any).state,
+                country: resource.country,
+                phone: (resource as any).phone,
+                website: (resource as any).website,
+                lat: (resource as any).lat,
+                lng: (resource as any).lng,
+              },
+            });
+            navigate("/");
+          }} aria-label="Chat with AI about this location">
+            <MessageSquare className="mr-2 h-4 w-4" /> Chat with AI
+          </Button>
         </div>
         {typeof (resource as any).distance === "number" && (
           <div className="text-sm text-muted-foreground">
