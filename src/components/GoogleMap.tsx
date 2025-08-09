@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
 import { Resource } from '@/data/resources';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation } from 'lucide-react';
+import { useGoogleMaps } from '@/hooks/useGoogleMaps';
 
 interface LatLng {
   lat: number;
@@ -31,8 +31,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   const markersRef = useRef<google.maps.Marker[]>([]);
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { isLoaded, error } = useGoogleMaps();
 
   // Category colors for markers - using semantic colors
   const categoryColors: Record<string, string> = {
@@ -44,27 +43,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
     'Hospice': '#ef4444',         // red-500
   };
 
-  // Initialize Google Maps
-  useEffect(() => {
-    if (!apiKey) {
-      setError('Google Maps API key is required');
-      return;
-    }
-
-    const loader = new Loader({
-      apiKey,
-      version: 'weekly',
-      libraries: ['places', 'geometry']
-    });
-
-    loader.load().then(() => {
-      setIsLoaded(true);
-      setError(null);
-    }).catch((err) => {
-      console.error('Failed to load Google Maps:', err);
-      setError('Failed to load Google Maps. Please check your API key.');
-    });
-  }, [apiKey]);
+  // Google Maps API loading is now handled by the GoogleMapsProvider
 
   // Create map instance
   useEffect(() => {

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { Resource, ResourceCategory } from "@/data/resources";
 import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -46,6 +47,7 @@ export default function SupportSearch() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [fetchingPlaces, setFetchingPlaces] = useState(false);
+  const { isLoaded: googleMapsLoaded, error: googleMapsError } = useGoogleMaps();
   const apiKey = "AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k";
 
   const navigate = useNavigate();
@@ -139,7 +141,7 @@ export default function SupportSearch() {
   }, [navigate]);
 
   const fetchNearbyPlaces = useCallback(async (location: LatLng) => {
-    if (!window.google || !window.google.maps) {
+    if (!googleMapsLoaded || !window.google?.maps?.places) {
       toast({ title: "Maps not loaded", description: "Please wait for Google Maps to load." });
       return;
     }
@@ -221,7 +223,7 @@ export default function SupportSearch() {
     } finally {
       setFetchingPlaces(false);
     }
-  }, [radius]);
+  }, [radius, googleMapsLoaded]);
 
   // Auto-fetch places when location changes
   useEffect(() => {
