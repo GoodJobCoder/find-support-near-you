@@ -1,8 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 const HeaderNav = () => {
   const { t } = useLanguage();
+  const { user, signOut } = useAuth();
   const linkBase =
     "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors";
   const getLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -26,6 +28,24 @@ const HeaderNav = () => {
           <NavLink to="/help" className={getLinkClass}>
             {t('nav.help')}
           </NavLink>
+          <NavLink to="/settings" className={getLinkClass}>
+            Settings
+          </NavLink>
+          {!user ? (
+            <NavLink to="/auth" className={getLinkClass}>
+              Sign In
+            </NavLink>
+          ) : (
+            <button
+              onClick={signOut}
+              className={[
+                linkBase,
+                "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+              ].join(" ")}
+            >
+              Sign Out
+            </button>
+          )}
         </div>
       </div>
     </nav>
