@@ -6,6 +6,17 @@ export type ResourceCategory =
   | "Hospice"
   | "Transportation";
 
+export interface BusinessHours {
+  monday?: string;
+  tuesday?: string;
+  wednesday?: string;
+  thursday?: string;
+  friday?: string;
+  saturday?: string;
+  sunday?: string;
+  is24Hours?: boolean;
+}
+
 export interface Resource {
   id: string;
   name: string;
@@ -18,6 +29,7 @@ export interface Resource {
   country: string;
   phone?: string;
   website?: string;
+  hours?: BusinessHours;
 }
 
 export const resources: Resource[] = [

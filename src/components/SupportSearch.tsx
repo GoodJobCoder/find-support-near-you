@@ -1,24 +1,28 @@
-import { useCallback, useMemo, useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
-import { useGoogleMaps } from "@/hooks/useGoogleMaps";
-import { Resource, ResourceCategory } from "@/data/resources";
-import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone, MessageSquare, Heart } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ResourceDetails from "@/components/ResourceDetails";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Heart, MapPin, Phone, Globe, Search, Locate, ExternalLink, MessageSquare } from "lucide-react";
+import { Resource, ResourceCategory, resources as staticResources } from "@/data/resources";
 import GoogleMap from "./GoogleMap";
-import MapToggle from "./MapToggle";
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
+import { useToast } from "@/hooks/use-toast";
 import { useChat } from "@/context/ChatContext";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
+import MapToggle from "./MapToggle";
+import ResourceDetails from "./ResourceDetails";
 import EmergencySection from "./EmergencySection";
 import FavoritesSection from "./FavoritesSection";
+import LanguageSelector from "./LanguageSelector";
+import AvailabilityStatus from "./AvailabilityStatus";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface LatLng { lat: number; lng: number }
 
@@ -42,6 +46,7 @@ function haversine(a: LatLng, b: LatLng) {
 const categories = ["All", "Support Group", "Treatment Center", "Counseling", "Financial Aid", "Hospice", "Transportation"] as const;
 
 export default function SupportSearch() {
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
   const [radius, setRadius] = useState<number>(25);
@@ -55,6 +60,7 @@ export default function SupportSearch() {
   const [activeTab, setActiveTab] = useState("search");
   const { isLoaded: googleMapsLoaded, error: googleMapsError } = useGoogleMaps();
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { toast } = useToast();
   const apiKey = "AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k";
 
   const navigate = useNavigate();
@@ -283,15 +289,16 @@ export default function SupportSearch() {
     <section className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="search">Search Resources</TabsTrigger>
-          <TabsTrigger value="favorites">Favorites ({resources.filter(r => favorites.includes(r.id)).length})</TabsTrigger>
-          <TabsTrigger value="emergency">Emergency Support</TabsTrigger>
+          <TabsTrigger value="search">{t('search.resources')}</TabsTrigger>
+          <TabsTrigger value="favorites">{t('search.favorites')} ({resources.filter(r => favorites.includes(r.id)).length})</TabsTrigger>
+          <TabsTrigger value="emergency">{t('search.emergency')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="search" className="space-y-6">
           <Card className="border border-border/70 shadow-sm backdrop-blur-sm bg-card/90">
-            <CardHeader>
-              <CardTitle className="text-2xl">Search nearby support</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-2xl">{t('search.nearby')}</CardTitle>
+              <LanguageSelector />
             </CardHeader>
             <CardContent className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-[auto,1fr,auto]">
@@ -301,9 +308,9 @@ export default function SupportSearch() {
                   <SelectValue placeholder="Search by" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="address">Address</SelectItem>
-                  <SelectItem value="zipcode">ZIP code</SelectItem>
-                  <SelectItem value="city">City</SelectItem>
+                  <SelectItem value="address">{t('search.address')}</SelectItem>
+                  <SelectItem value="zipcode">{t('search.zipcode')}</SelectItem>
+                  <SelectItem value="city">{t('search.city')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -318,24 +325,33 @@ export default function SupportSearch() {
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex gap-2">
-              <Button onClick={geocode} disabled={loading} className="w-full sm:w-auto">
-                <Globe2 className="mr-2 h-4 w-4" /> Search
+              <Button
+                size="default"
+                disabled={loading || !query.trim()}
+                onClick={geocode}
+              >
+                {t('search.go')}
               </Button>
-              <Button onClick={doGeolocate} disabled={loading} variant="secondary" className="w-full sm:w-auto">
-                <Navigation className="mr-2 h-4 w-4" /> Use my location
+              <Button
+                variant="secondary"
+                disabled={loading}
+                onClick={doGeolocate}
+              >
+                <Locate className="h-4 w-4" /> {t('search.location')}
               </Button>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground">Category</label>
+              <Label className="text-sm font-medium">{t('search.category')}</Label>
               <Select value={category} onValueChange={(v) => setCategory(v as any)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => (
+                  <SelectItem value="All">{t('search.all')}</SelectItem>
+                  {categories.slice(1).map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
@@ -344,10 +360,7 @@ export default function SupportSearch() {
               </Select>
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Search radius</span>
-                <span>{radius} km</span>
-              </div>
+              <Label className="text-sm font-medium">{t('search.radius')}: {radius} km</Label>
               <Slider value={[radius]} min={5} max={100} step={5} onValueChange={(v) => setRadius(v[0])} />
             </div>
           </div>
@@ -480,6 +493,7 @@ function ResourceCard({
 }) {
   const { openWith } = useChat();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <Card 
@@ -497,6 +511,9 @@ function ResourceCard({
             <div className="mt-1 text-sm text-muted-foreground">
               {resource.city}{resource.state ? `, ${resource.state}` : ""} · {resource.country}
             </div>
+            {resource.hours && (
+              <AvailabilityStatus hours={resource.hours} className="mb-2" />
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Badge>{resource.category}</Badge>
@@ -568,7 +585,7 @@ function ResourceCard({
         </div>
         {typeof (resource as any).distance === "number" && (
           <div className="text-sm text-muted-foreground">
-            {(resource as any).distance.toFixed(1)} km away
+            {(resource as any).distance.toFixed(1)} {t('resource.distance')}
           </div>
         )}
       </CardContent>

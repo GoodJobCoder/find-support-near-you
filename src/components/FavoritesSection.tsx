@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Heart, MapPin, ExternalLink } from 'lucide-react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Resource } from '@/data/resources';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface FavoritesSectionProps {
   resources: Resource[];
@@ -13,6 +14,7 @@ interface FavoritesSectionProps {
 
 export default function FavoritesSection({ resources, onResourceSelect }: FavoritesSectionProps) {
   const { favorites } = useFavorites();
+  const { t } = useLanguage();
   
   const favoriteResources = resources.filter(resource => favorites.includes(resource.id));
 
@@ -21,7 +23,7 @@ export default function FavoritesSection({ resources, onResourceSelect }: Favori
       <Card className="border-dashed">
         <CardContent className="py-8 text-center text-muted-foreground">
           <Heart className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p>No favorites yet. Add resources to your favorites by clicking the heart icon.</p>
+          <p>{t('favorites.empty')}</p>
         </CardContent>
       </Card>
     );
@@ -32,7 +34,7 @@ export default function FavoritesSection({ resources, onResourceSelect }: Favori
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Heart className="h-5 w-5 text-red-500" />
-          Your Favorites ({favoriteResources.length})
+          {t('favorites.your')} ({favoriteResources.length})
         </CardTitle>
       </CardHeader>
       <CardContent>

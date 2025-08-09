@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Globe, ExternalLink, MessageSquare } from "lucide-react";
 import { useChat } from "@/context/ChatContext";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/context/LanguageContext";
+import AvailabilityStatus from "./AvailabilityStatus";
+import TransportationOptions from "./TransportationOptions";
 
 export default function ResourceDetails({ resource }: { resource: Resource & { distance?: number } }) {
   const { openWith } = useChat();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
@@ -32,8 +36,12 @@ export default function ResourceDetails({ resource }: { resource: Resource & { d
 
       {typeof (resource as any).distance === "number" && (
         <div className="text-sm text-muted-foreground">
-          {(resource as any).distance.toFixed(1)} km away
+          {(resource as any).distance.toFixed(1)} {t('resource.distance')}
         </div>
+      )}
+
+      {resource.hours && (
+        <AvailabilityStatus hours={resource.hours} className="text-sm" />
       )}
 
       <div className="flex flex-wrap gap-2 pt-2">
@@ -59,20 +67,20 @@ export default function ResourceDetails({ resource }: { resource: Resource & { d
           }}
         >
           <span className="inline-flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" /> Chat about this location
+            <MessageSquare className="h-4 w-4" /> {t('resource.chat')}
           </span>
         </Button>
         {resource.phone && (
           <Button asChild variant="secondary" size="sm">
             <a href={`tel:${resource.phone}`} className="inline-flex items-center gap-2">
-              <Phone className="h-4 w-4" /> Call
+              <Phone className="h-4 w-4" /> {t('resource.call')}
             </a>
           </Button>
         )}
         {resource.website && (
           <Button asChild size="sm">
             <a href={resource.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">
-              <Globe className="h-4 w-4" /> Visit Website
+              <Globe className="h-4 w-4" /> {t('resource.website')}
             </a>
           </Button>
         )}
@@ -83,10 +91,16 @@ export default function ResourceDetails({ resource }: { resource: Resource & { d
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2"
           >
-            Open in Maps <ExternalLink className="h-4 w-4" />
+            {t('resource.maps')} <ExternalLink className="h-4 w-4" />
           </a>
         </Button>
       </div>
+
+      <TransportationOptions 
+        destination={`${resource.name}, ${resource.address}, ${resource.city}`}
+        lat={resource.lat}
+        lng={resource.lng}
+      />
 
       <div className="rounded-md border p-3 text-sm text-muted-foreground">
         Tip: Information may change. Please contact the organization to confirm details.
