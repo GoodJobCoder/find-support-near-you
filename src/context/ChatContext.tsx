@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+const DEFAULT_GEMINI_API_KEY = "AIzaSyA8XZOuC1iGZZNe6ZK4SXvJE918yEiTIQQ";
+
 export interface ChatResource {
   id: string;
   name: string;
@@ -34,9 +36,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [initialQuestion, setInitialQuestion] = useState<string | null>(null);
   const [apiKey, _setApiKey] = useState<string | null>(() => {
     try {
-      return localStorage.getItem("perplexity_api_key");
+      const stored = localStorage.getItem("perplexity_api_key");
+      return stored || DEFAULT_GEMINI_API_KEY;
     } catch {
-      return null;
+      return DEFAULT_GEMINI_API_KEY;
     }
   });
 
