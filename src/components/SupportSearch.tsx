@@ -116,7 +116,7 @@ export default function SupportSearch() {
       .map((r) => ({ ...r, distance: haversine(userLoc, { lat: r.lat, lng: r.lng }) }))
       .filter((r) => r.distance <= radius)
       .sort((a, b) => a.distance - b.distance);
-  }, [userLoc, category, radius]);
+  }, [userLoc, category, radius, resources]);
 
   const selectedResource = useMemo(() => {
     if (!selectedResourceId) return null;
