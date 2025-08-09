@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
-import { resources, Resource, ResourceCategory } from "@/data/resources";
+import { Resource, ResourceCategory } from "@/data/resources";
 import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ResourceDetails from "@/components/ResourceDetails";
@@ -44,6 +44,8 @@ export default function SupportSearch() {
   const [mode, setMode] = useState<"address" | "zipcode" | "city">("address");
   const [showMap, setShowMap] = useState(false);
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [fetchingPlaces, setFetchingPlaces] = useState(false);
   const apiKey = "AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k";
 
   const navigate = useNavigate();
@@ -136,6 +138,98 @@ export default function SupportSearch() {
     navigate({ search: params.toString() }, { replace: false });
   }, [navigate]);
 
+  const fetchNearbyPlaces = useCallback(async (location: LatLng) => {
+    if (!window.google || !window.google.maps) {
+      toast({ title: "Maps not loaded", description: "Please wait for Google Maps to load." });
+      return;
+    }
+
+    setFetchingPlaces(true);
+    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+    const newResources: Resource[] = [];
+
+    // Define search queries for different categories
+    const searchQueries: { category: ResourceCategory; keywords: string[] }[] = [
+      { category: "Support Group", keywords: ["cancer support group", "support group", "patient support"] },
+      { category: "Treatment Center", keywords: ["cancer center", "oncology center", "hospital oncology", "cancer treatment"] },
+      { category: "Counseling", keywords: ["cancer counseling", "oncology counselor", "therapy"] },
+      { category: "Financial Aid", keywords: ["cancer financial assistance", "patient financial services", "charity financial aid"] },
+      { category: "Hospice", keywords: ["hospice care", "palliative care", "end of life care"] },
+      { category: "Transportation", keywords: ["medical transport", "patient transport", "healthcare transport"] }
+    ];
+
+    try {
+      const promises = searchQueries.map(({ category, keywords }) => 
+        Promise.all(keywords.map(keyword => 
+          new Promise<google.maps.places.PlaceResult[]>((resolve) => {
+            const request: google.maps.places.TextSearchRequest = {
+              query: `${keyword} near me`,
+              location: new window.google.maps.LatLng(location.lat, location.lng),
+              radius: radius * 1000, // Convert km to meters
+            };
+
+            service.textSearch(request, (results, status) => {
+              if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+                resolve(results);
+              } else {
+                resolve([]);
+              }
+            });
+          })
+        ))
+      );
+
+      const allResults = await Promise.all(promises);
+      
+      // Process results and convert to our Resource format
+      allResults.forEach((categoryResults, categoryIndex) => {
+        const category = searchQueries[categoryIndex].category;
+        categoryResults.forEach(keywordResults => {
+          keywordResults.forEach(place => {
+            if (place.place_id && place.geometry?.location && place.name) {
+              // Avoid duplicates
+              if (!newResources.find(r => r.id === place.place_id)) {
+                newResources.push({
+                  id: place.place_id,
+                  name: place.name,
+                  category: category,
+                  lat: place.geometry.location.lat(),
+                  lng: place.geometry.location.lng(),
+                  address: place.formatted_address || "",
+                  city: place.vicinity || "",
+                  country: "Unknown",
+                  phone: undefined,
+                  website: undefined
+                });
+              }
+            }
+          });
+        });
+      });
+
+      setResources(newResources);
+      toast({ 
+        title: "Places loaded", 
+        description: `Found ${newResources.length} nearby resources.` 
+      });
+    } catch (error) {
+      console.error("Error fetching places:", error);
+      toast({ 
+        title: "Error fetching places", 
+        description: "Could not load nearby resources. Please try again." 
+      });
+    } finally {
+      setFetchingPlaces(false);
+    }
+  }, [radius]);
+
+  // Auto-fetch places when location changes
+  useEffect(() => {
+    if (userLoc) {
+      fetchNearbyPlaces(userLoc);
+    }
+  }, [userLoc, fetchNearbyPlaces]);
+
   return (
     <section className="w-full">
       <Card className="border border-border/70 shadow-sm backdrop-blur-sm bg-card/90">
@@ -209,7 +303,9 @@ export default function SupportSearch() {
           <div className="pt-2 text-sm text-muted-foreground">
             {userLoc ? (
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" /> Location set. Showing results within {radius} km.
+                <MapPin className="h-4 w-4" /> 
+                Location set. Showing results within {radius} km.
+                {fetchingPlaces && " • Loading nearby places..."}
               </div>
             ) : (
               <div>
@@ -250,10 +346,17 @@ export default function SupportSearch() {
                 ))}
               </div>
             )}
-            {filtered.length === 0 && (
+            {filtered.length === 0 && !fetchingPlaces && (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">
-                  No resources within {radius} km. Try increasing the radius or a nearby city.
+                  No resources within {radius} km. Try increasing the radius or searching in a different area.
+                </CardContent>
+              </Card>
+            )}
+            {fetchingPlaces && (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  Loading nearby places from Google Maps...
                 </CardContent>
               </Card>
             )}
