@@ -18,7 +18,6 @@ import MapToggle from "./MapToggle";
 import { useChat } from "@/context/ChatContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import EmergencySection from "./EmergencySection";
-import AdvancedFilters, { AdvancedFilterOptions } from "./AdvancedFilters";
 import FavoritesSection from "./FavoritesSection";
 
 interface LatLng { lat: number; lng: number }
@@ -54,12 +53,6 @@ export default function SupportSearch() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [fetchingPlaces, setFetchingPlaces] = useState(false);
   const [activeTab, setActiveTab] = useState("search");
-  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterOptions>({
-    ageGroup: 'All',
-    cancerType: 'All',
-    accessibility: [],
-    specialties: []
-  });
   const { isLoaded: googleMapsLoaded, error: googleMapsError } = useGoogleMaps();
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
   const apiKey = "AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k";
@@ -129,16 +122,9 @@ export default function SupportSearch() {
       .map((r) => ({ ...r, distance: haversine(userLoc, { lat: r.lat, lng: r.lng }) }))
       .filter((r) => r.distance <= radius);
 
-    // Apply advanced filters (mock implementation - in real app, this would filter based on actual resource data)
-    if (advancedFilters.ageGroup !== 'All') {
-      // In a real implementation, you would filter based on resource metadata
-    }
-    if (advancedFilters.cancerType !== 'All') {
-      // In a real implementation, you would filter based on resource specialties
-    }
     
     return filteredResources.sort((a, b) => a.distance - b.distance);
-  }, [userLoc, category, radius, resources, advancedFilters]);
+  }, [userLoc, category, radius, resources]);
 
   const selectedResource = useMemo(() => {
     if (!selectedResourceId) return null;
@@ -366,10 +352,6 @@ export default function SupportSearch() {
             </div>
           </div>
 
-          <AdvancedFilters 
-            filters={advancedFilters} 
-            onFiltersChange={setAdvancedFilters} 
-          />
 
           {/* Map Toggle */}
           {userLoc && filtered.length > 0 && (
