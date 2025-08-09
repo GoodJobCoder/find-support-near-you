@@ -1,6 +1,10 @@
 import SupportSearch from "@/components/SupportSearch";
+import { Button } from "@/components/ui/button";
+import { Pill } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   return (
     <div>
       <header className="relative min-h-screen overflow-hidden">
@@ -20,6 +24,18 @@ const Index = () => {
           </div>
           <div className="mx-auto mt-10 max-w-4xl w-full">
             <SupportSearch />
+          </div>
+          
+          {/* Pharmacy Button */}
+          <div className="mx-auto mt-6">
+            <Button
+              onClick={() => navigate("/pharmacy")}
+              variant="outline"
+              className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
+            >
+              <Pill className="mr-2 h-4 w-4" />
+              Find Pharmacies
+            </Button>
           </div>
           
           {/* Footnote within background */}
