@@ -48,9 +48,6 @@ const translations: Record<string, Record<string, string>> = {
     'help.language_support_text': 'Use the language selector to browse resources in your preferred language where available.',
     'nav.home': 'Home',
     'nav.help': 'Help Center',
-    'nav.settings': 'Settings',
-    'nav.signin': 'Sign In',
-    'nav.signout': 'Sign Out',
   },
   es: {
     'search.resources': 'Buscar Recursos',
@@ -91,9 +88,6 @@ const translations: Record<string, Record<string, string>> = {
     'help.language_support_text': 'Usa el selector de idioma para navegar recursos en tu idioma preferido donde esté disponible.',
     'nav.home': 'Inicio',
     'nav.help': 'Centro de Ayuda',
-    'nav.settings': 'Configuración',
-    'nav.signin': 'Iniciar sesión',
-    'nav.signout': 'Cerrar sesión',
   },
 };
 

@@ -3,7 +3,6 @@ import { useLanguage } from "@/context/LanguageContext";
 
 const HeaderNav = () => {
   const { t } = useLanguage();
-  
   const linkBase =
     "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors";
   const getLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -26,9 +25,6 @@ const HeaderNav = () => {
           </NavLink>
           <NavLink to="/help" className={getLinkClass}>
             {t('nav.help')}
-          </NavLink>
-          <NavLink to="/settings" className={getLinkClass}>
-            Settings
           </NavLink>
         </div>
       </div>
