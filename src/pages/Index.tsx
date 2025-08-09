@@ -1,10 +1,6 @@
 import SupportSearch from "@/components/SupportSearch";
-import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const navigate = useNavigate();
   return (
     <div>
       <header className="relative min-h-screen overflow-hidden">
@@ -26,17 +22,6 @@ const Index = () => {
             <SupportSearch />
           </div>
           
-          {/* Pharmacy Button */}
-          <div className="mx-auto mt-6">
-            <Button
-              onClick={() => navigate("/pharmacy")}
-              variant="outline"
-              className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
-            >
-              <MapPin className="mr-2 h-4 w-4" />
-              Find Pharmacies
-            </Button>
-          </div>
           
           {/* Footnote within background */}
           <div className="mx-auto mt-8 max-w-4xl">
