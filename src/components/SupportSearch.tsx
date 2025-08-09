@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,9 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { resources, Resource, ResourceCategory } from "@/data/resources";
 import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ResourceDetails from "@/components/ResourceDetails";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import GoogleMap from "./GoogleMap";
 import MapToggle from "./MapToggle";
 
@@ -45,6 +48,13 @@ export default function SupportSearch() {
   const [showMap, setShowMap] = useState(false);
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('googleMapsApiKey') || '');
+
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const id = searchParams.get('resource');
+    setSelectedResourceId(id);
+  }, [searchParams]);
 
   // Save API key to localStorage
   const handleApiKeyChange = useCallback((key: string) => {
@@ -110,6 +120,29 @@ export default function SupportSearch() {
       .filter((r) => r.distance <= radius)
       .sort((a, b) => a.distance - b.distance);
   }, [userLoc, category, radius]);
+
+  const selectedResource = useMemo(() => {
+    if (!selectedResourceId) return null;
+    return (
+      filtered.find((r) => r.id === selectedResourceId) ||
+      resources.find((r) => r.id === selectedResourceId) ||
+      null
+    );
+  }, [selectedResourceId, filtered]);
+
+  const openResource = useCallback((id: string) => {
+    setSelectedResourceId(id);
+    const params = new URLSearchParams(window.location.search);
+    params.set("resource", id);
+    navigate({ search: params.toString() }, { replace: false });
+  }, [navigate]);
+
+  const closeResource = useCallback(() => {
+    setSelectedResourceId(null);
+    const params = new URLSearchParams(window.location.search);
+    params.delete("resource");
+    navigate({ search: params.toString() }, { replace: false });
+  }, [navigate]);
 
   return (
     <section className="w-full">
@@ -247,9 +280,18 @@ export default function SupportSearch() {
         )}
       </section>
 
-      <p className="mt-8 text-xs text-muted-foreground">
-        Disclaimer: Information is provided as a convenience and may change. Please contact organizations directly to confirm details.
-      </p>
+      {/* Details Dialog */}
+      <Dialog open={!!selectedResource} onOpenChange={(o) => !o && closeResource()}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Location details</DialogTitle>
+          </DialogHeader>
+          {selectedResource && <ResourceDetails resource={selectedResource} />}
+          <div className="flex justify-end pt-4">
+            <Button variant="outline" onClick={closeResource}>Back</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
