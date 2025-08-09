@@ -282,13 +282,19 @@ export default function SupportSearch() {
 
       {/* Details Dialog */}
       <Dialog open={!!selectedResource} onOpenChange={(o) => !o && closeResource()}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Location details</DialogTitle>
-          </DialogHeader>
-          {selectedResource && <ResourceDetails resource={selectedResource} />}
-          <div className="flex justify-end pt-4">
-            <Button variant="outline" onClick={closeResource}>Back</Button>
+        <DialogContent className="max-w-none w-screen h-screen sm:rounded-none p-0 bg-background">
+          <div className="flex h-full flex-col">
+            <div className="border-b px-4 py-3">
+              <DialogHeader>
+                <DialogTitle>Location details</DialogTitle>
+              </DialogHeader>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {selectedResource && <ResourceDetails resource={selectedResource} />}
+            </div>
+            <div className="border-t px-4 py-3 flex justify-end">
+              <Button variant="outline" onClick={closeResource}>Back</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
