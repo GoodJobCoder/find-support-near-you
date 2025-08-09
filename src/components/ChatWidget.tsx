@@ -63,15 +63,79 @@ export default function ChatWidget() {
     }
   }, [open, resource]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || loading) return;
+
     setMessages((m) => [...m, { role: "user", content: text }]);
     setInput("");
-    // Simulated assistant response
-    setTimeout(() => {
-      setMessages((m) => [...m, { role: "assistant", content: cannedReply(text) }]);
-    }, 400);
+
+    // If no API key, fall back to canned reply
+    if (!apiKey) {
+      setTimeout(() => {
+        setMessages((m) => [...m, { role: "assistant", content: cannedReply(text) }]);
+      }, 300);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Build Gemini contents from history + current input and optional location context
+      const history = messages;
+      const contents: any[] = [];
+
+      const locationContext = resource
+        ? `\nLocation context (use when relevant):\n${JSON.stringify(resource, null, 2)}`
+        : "";
+
+      const instruction =
+        "You are a concise, friendly support assistant. If the user asks about a specific location, use the provided context to answer accurately. Offer practical steps (call, website, directions) and be brief." +
+        locationContext;
+
+      contents.push({ role: "user", parts: [{ text: instruction }] });
+
+      for (const m of history) {
+        contents.push({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        });
+      }
+      contents.push({ role: "user", parts: [{ text }] });
+
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents }),
+        }
+      );
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        console.error("Gemini error:", errText);
+        throw new Error("Failed to generate reply");
+      }
+
+      const data = await resp.json();
+      const output =
+        data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join(" ") ||
+        "Sorry, I couldn't generate a response right now.";
+
+      setMessages((m) => [...m, { role: "assistant", content: output }]);
+    } catch (e) {
+      console.error(e);
+      setMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content:
+            "I'm having trouble connecting to the AI service. Please try again or add a valid Gemini API key.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,6 +149,18 @@ export default function ChatWidget() {
                 <X className="h-4 w-4" />
               </button>
             </div>
+            {!apiKey && (
+              <div className="px-3 py-2 border-b bg-muted/30 flex gap-2">
+                <Input
+                  placeholder="Enter Gemini API key"
+                  value={tempKey}
+                  onChange={(e) => setTempKey(e.target.value)}
+                />
+                <Button size="sm" onClick={() => setApiKey(tempKey || null)} disabled={!tempKey}>
+                  Save
+                </Button>
+              </div>
+            )}
             <div className="max-h-80 overflow-y-auto p-3 space-y-2 bg-background/95">
               {messages.map((m, i) => (
                 <div key={i} className={`text-sm ${m.role === "user" ? "text-foreground" : "text-muted-foreground"}`}>
@@ -100,9 +176,10 @@ export default function ChatWidget() {
                 placeholder="Ask a question..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                onKeyDown={(e) => e.key === 'Enter' && !loading && handleSend()}
+                disabled={loading}
               />
-              <Button onClick={handleSend} aria-label="Send message">
+              <Button onClick={handleSend} aria-label="Send message" disabled={loading}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
