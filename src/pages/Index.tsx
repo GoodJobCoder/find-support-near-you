@@ -1,6 +1,6 @@
 import SupportSearch from "@/components/SupportSearch";
 import { Button } from "@/components/ui/button";
-import { Pill } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -33,7 +33,7 @@ const Index = () => {
               variant="outline"
               className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
             >
-              <Pill className="mr-2 h-4 w-4" />
+              <MapPin className="mr-2 h-4 w-4" />
               Find Pharmacies
             </Button>
           </div>
