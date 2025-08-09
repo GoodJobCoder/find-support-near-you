@@ -1,6 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "next-themes";
 import { useSEO } from "@/hooks/useSEO";
@@ -11,58 +9,46 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/use-toast";
 
 const Settings = () => {
   useSEO({
     title: "Settings | CareConnect",
-    description: "Manage your account details, language, theme, and notifications.",
+    description: "Customize language, theme, and preferences. No account required.",
     canonical: typeof window !== 'undefined' ? window.location.href : undefined,
   });
 
-  const navigate = useNavigate();
-  const { user, loading, profile, updateProfile, signOut } = useAuth();
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
 
   const [displayName, setDisplayName] = useState("");
   const [notifications, setNotifications] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
+    const savedName = localStorage.getItem("settings.displayName");
+    if (savedName !== null) setDisplayName(savedName);
+    const savedNotif = localStorage.getItem("settings.notifications");
+    if (savedNotif !== null) setNotifications(savedNotif === "true");
+  }, []);
 
-  useEffect(() => {
-    if (profile) {
-      setDisplayName(profile.display_name || "");
-      setNotifications(profile.notifications ?? true);
-    }
-  }, [profile]);
-
-  const onSave = async () => {
-    await updateProfile({
-      display_name: displayName,
-      language,
-      theme: theme || "system",
-      notifications,
+  const onSave = () => {
+    localStorage.setItem("settings.displayName", displayName);
+    localStorage.setItem("settings.notifications", String(notifications));
+    toast({
+      title: "Preferences saved",
+      description: "Your settings have been updated.",
     });
   };
-
-  const email = useMemo(() => user?.email || "", [user]);
 
   return (
     <main className="container mx-auto max-w-3xl px-4 py-8 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>Your account information</CardDescription>
+          <CardTitle>Profile</CardTitle>
+          <CardDescription>Personalize your profile preferences</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input value={email} disabled />
-          </div>
           <div className="space-y-2">
             <Label>Display name</Label>
             <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" />
@@ -73,9 +59,6 @@ const Settings = () => {
               <div className="text-xs text-muted-foreground">Receive important updates</div>
             </div>
             <Switch checked={notifications} onCheckedChange={setNotifications} />
-          </div>
-          <div className="sm:col-span-2">
-            <Button variant="destructive" onClick={signOut}>Sign out</Button>
           </div>
         </CardContent>
       </Card>
