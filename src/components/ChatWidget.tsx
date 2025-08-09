@@ -80,46 +80,45 @@ export default function ChatWidget() {
 
     try {
       setLoading(true);
-      // Build Gemini contents from history + current input and optional location context
       const history = messages;
-      const contents: any[] = [];
 
       const locationContext = resource
-        ? `\nLocation context (use when relevant):\n${JSON.stringify(resource, null, 2)}`
+        ? `Location context (use when relevant): ${JSON.stringify(resource)}`
         : "";
 
-      const instruction =
+      const systemPrompt =
         "You are a concise, friendly support assistant. If the user asks about a specific location, use the provided context to answer accurately. Offer practical steps (call, website, directions) and be brief." +
-        locationContext;
+        (locationContext ? `\n${locationContext}` : "");
 
-      contents.push({ role: "user", parts: [{ text: instruction }] });
+      const openaiMessages = [
+        { role: "system", content: systemPrompt },
+        ...history.map((m) => ({ role: m.role, content: m.content })),
+        { role: "user", content: text },
+      ];
 
-      for (const m of history) {
-        contents.push({
-          role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content }],
-        });
-      }
-      contents.push({ role: "user", parts: [{ text }] });
-
-      const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents }),
-        }
-      );
+      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-2025-04-14",
+          messages: openaiMessages,
+          temperature: 0.2,
+          max_tokens: 500,
+        }),
+      });
 
       if (!resp.ok) {
         const errText = await resp.text();
-        console.error("Gemini error:", errText);
+        console.error("OpenAI error:", errText);
         throw new Error("Failed to generate reply");
       }
 
       const data = await resp.json();
       const output =
-        data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join(" ") ||
+        data?.choices?.[0]?.message?.content?.trim() ||
         "Sorry, I couldn't generate a response right now.";
 
       setMessages((m) => [...m, { role: "assistant", content: output }]);
@@ -130,7 +129,7 @@ export default function ChatWidget() {
         {
           role: "assistant",
           content:
-            "I'm having trouble connecting to the AI service. Please try again or add a valid Gemini API key.",
+            "I'm having trouble connecting to the AI service right now. Please try again later.",
         },
       ]);
     } finally {

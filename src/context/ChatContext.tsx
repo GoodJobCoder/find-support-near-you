@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-const DEFAULT_GEMINI_API_KEY = "AIzaSyA8XZOuC1iGZZNe6ZK4SXvJE918yEiTIQQ";
+const DEFAULT_OPENAI_API_KEY = "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";
 
 export interface ChatResource {
   id: string;
@@ -36,18 +36,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [initialQuestion, setInitialQuestion] = useState<string | null>(null);
   const [apiKey, _setApiKey] = useState<string | null>(() => {
     try {
-      const stored = localStorage.getItem("perplexity_api_key");
-      return stored || DEFAULT_GEMINI_API_KEY;
+      const stored = localStorage.getItem("openai_api_key");
+      return stored || DEFAULT_OPENAI_API_KEY;
     } catch {
-      return DEFAULT_GEMINI_API_KEY;
+      return DEFAULT_OPENAI_API_KEY;
     }
   });
 
   const setApiKey = (key: string | null) => {
     _setApiKey(key);
     try {
-      if (key) localStorage.setItem("perplexity_api_key", key);
-      else localStorage.removeItem("perplexity_api_key");
+      if (key) localStorage.setItem("openai_api_key", key);
+      else localStorage.removeItem("openai_api_key");
     } catch {}
   };
 
