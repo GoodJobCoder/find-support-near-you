@@ -22,7 +22,6 @@ const Index = () => {
             <SupportSearch />
           </div>
           
-          
           {/* Footnote within background */}
           <div className="mx-auto mt-8 max-w-4xl">
             <article className="rounded-lg border border-border/70 bg-card/80 backdrop-blur-sm p-6 leading-relaxed text-sm text-muted-foreground">
