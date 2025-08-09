@@ -24,7 +24,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   selectedResourceId,
   onResourceSelect,
   searchRadius = 25,
-  apiKey
+  apiKey = "AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k"
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);

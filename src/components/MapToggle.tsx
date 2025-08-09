@@ -18,13 +18,9 @@ const MapToggle: React.FC<MapToggleProps> = ({
   apiKey,
   onApiKeyChange
 }) => {
-  const [showApiKeyInput, setShowApiKeyInput] = useState(!apiKey);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
   const handleMapToggle = () => {
-    if (!apiKey && !showMap) {
-      setShowApiKeyInput(true);
-      return;
-    }
     onToggle(!showMap);
   };
 
@@ -49,54 +45,8 @@ const MapToggle: React.FC<MapToggleProps> = ({
           {showMap ? 'Show List' : 'Show Map'}
         </Button>
         
-        {apiKey && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-            className="flex items-center gap-2"
-          >
-            <Key className="w-4 h-4" />
-            API Key
-          </Button>
-        )}
       </div>
 
-      {showApiKeyInput && (
-        <div className="space-y-3">
-          <Alert>
-            <Key className="w-4 h-4" />
-            <AlertDescription>
-              To display the map, you need a Google Maps API key. 
-              <a 
-                href="https://developers.google.com/maps/documentation/javascript/get-api-key" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline ml-1"
-              >
-                Get one here
-              </a>
-            </AlertDescription>
-          </Alert>
-          
-          <form onSubmit={handleApiKeySubmit} className="space-y-2">
-            <Label htmlFor="api-key">Google Maps API Key</Label>
-            <div className="flex gap-2">
-              <Input
-                id="api-key"
-                type="password"
-                placeholder="Enter your Google Maps API key"
-                value={apiKey}
-                onChange={(e) => onApiKeyChange(e.target.value)}
-                className="flex-1"
-              />
-              <Button type="submit" size="sm" disabled={!apiKey.trim()}>
-                Save
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 };

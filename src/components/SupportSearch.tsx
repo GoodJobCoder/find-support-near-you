@@ -47,7 +47,7 @@ export default function SupportSearch() {
   const [mode, setMode] = useState<"address" | "zipcode" | "city">("address");
   const [showMap, setShowMap] = useState(false);
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('googleMapsApiKey') || '');
+  const [apiKey, setApiKey] = useState("AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k");
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -56,11 +56,6 @@ export default function SupportSearch() {
     setSelectedResourceId(id);
   }, [searchParams]);
 
-  // Save API key to localStorage
-  const handleApiKeyChange = useCallback((key: string) => {
-    setApiKey(key);
-    localStorage.setItem('googleMapsApiKey', key);
-  }, []);
 
   const doGeolocate = useCallback(() => {
     if (!("geolocation" in navigator)) {
@@ -215,7 +210,7 @@ export default function SupportSearch() {
               showMap={showMap}
               onToggle={setShowMap}
               apiKey={apiKey}
-              onApiKeyChange={handleApiKeyChange}
+              onApiKeyChange={() => {}}
             />
           )}
 
@@ -247,9 +242,9 @@ export default function SupportSearch() {
                 center={userLoc}
                 resources={filtered}
                 selectedResourceId={selectedResourceId}
-                onResourceSelect={(resource) => setSelectedResourceId(resource.id)}
+                onResourceSelect={(resource) => openResource(resource.id)}
                 searchRadius={radius}
-                apiKey={apiKey}
+                apiKey="AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k"
               />
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -258,7 +253,7 @@ export default function SupportSearch() {
                     key={r.id} 
                     resource={r}
                     isSelected={selectedResourceId === r.id}
-                    onSelect={() => setSelectedResourceId(r.id)}
+                    onSelect={() => openResource(r.id)}
                   />
                 ))}
               </div>
