@@ -2,7 +2,7 @@ import SupportSearch from "@/components/SupportSearch";
 
 const Index = () => {
   return (
-    <>
+    <div>
       <header className="relative min-h-screen overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[hsl(var(--brand-1))] via-[hsl(var(--brand-3))] to-[hsl(var(--brand-2))] opacity-40" />
         {/* Decorative pink glows */}
@@ -33,7 +33,7 @@ const Index = () => {
           </article>
         </section>
       </main>
-    </>
+    </div>
   );
 };
 
