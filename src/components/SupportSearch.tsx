@@ -5,16 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { Resource, ResourceCategory } from "@/data/resources";
-import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone, MessageSquare } from "lucide-react";
+import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone, MessageSquare, Heart } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ResourceDetails from "@/components/ResourceDetails";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import GoogleMap from "./GoogleMap";
 import MapToggle from "./MapToggle";
 import { useChat } from "@/context/ChatContext";
+import { useFavorites } from "@/hooks/useFavorites";
+import EmergencySection from "./EmergencySection";
+import AdvancedFilters, { AdvancedFilterOptions } from "./AdvancedFilters";
+import FavoritesSection from "./FavoritesSection";
 
 interface LatLng { lat: number; lng: number }
 
@@ -48,7 +53,15 @@ export default function SupportSearch() {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [fetchingPlaces, setFetchingPlaces] = useState(false);
+  const [activeTab, setActiveTab] = useState("search");
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterOptions>({
+    ageGroup: 'All',
+    cancerType: 'All',
+    accessibility: [],
+    specialties: []
+  });
   const { isLoaded: googleMapsLoaded, error: googleMapsError } = useGoogleMaps();
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
   const apiKey = "AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k";
 
   const navigate = useNavigate();
@@ -111,12 +124,21 @@ export default function SupportSearch() {
 
   const filtered = useMemo(() => {
     if (!userLoc) return [] as (Resource & { distance: number })[];
-    return resources
+    let filteredResources = resources
       .filter((r) => (category === "All" ? true : r.category === category))
       .map((r) => ({ ...r, distance: haversine(userLoc, { lat: r.lat, lng: r.lng }) }))
-      .filter((r) => r.distance <= radius)
-      .sort((a, b) => a.distance - b.distance);
-  }, [userLoc, category, radius, resources]);
+      .filter((r) => r.distance <= radius);
+
+    // Apply advanced filters (mock implementation - in real app, this would filter based on actual resource data)
+    if (advancedFilters.ageGroup !== 'All') {
+      // In a real implementation, you would filter based on resource metadata
+    }
+    if (advancedFilters.cancerType !== 'All') {
+      // In a real implementation, you would filter based on resource specialties
+    }
+    
+    return filteredResources.sort((a, b) => a.distance - b.distance);
+  }, [userLoc, category, radius, resources, advancedFilters]);
 
   const selectedResource = useMemo(() => {
     if (!selectedResourceId) return null;
@@ -273,11 +295,19 @@ export default function SupportSearch() {
 
   return (
     <section className="w-full">
-      <Card className="border border-border/70 shadow-sm backdrop-blur-sm bg-card/90">
-        <CardHeader>
-          <CardTitle className="text-2xl">Search nearby support</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="search">Search Resources</TabsTrigger>
+          <TabsTrigger value="favorites">Favorites ({favorites.length})</TabsTrigger>
+          <TabsTrigger value="emergency">Emergency Support</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="search" className="space-y-6">
+          <Card className="border border-border/70 shadow-sm backdrop-blur-sm bg-card/90">
+            <CardHeader>
+              <CardTitle className="text-2xl">Search nearby support</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-[auto,1fr,auto]">
             <div className="w-full sm:w-44">
               <Select value={mode} onValueChange={(v) => setMode(v as any)}>
@@ -336,6 +366,11 @@ export default function SupportSearch() {
             </div>
           </div>
 
+          <AdvancedFilters 
+            filters={advancedFilters} 
+            onFiltersChange={setAdvancedFilters} 
+          />
+
           {/* Map Toggle */}
           {userLoc && filtered.length > 0 && (
             <MapToggle showMap={showMap} onToggle={setShowMap} />
@@ -357,59 +392,74 @@ export default function SupportSearch() {
         </CardContent>
       </Card>
 
-      <section aria-labelledby="results-heading" className="mt-8" role="region">
-        <h2 id="results-heading" className="sr-only">Search results</h2>
-        {userLoc ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {filtered.length} result{filtered.length === 1 ? "" : "s"} found
-              </p>
-            </div>
-            {showMap ? (
-              <GoogleMap
-                center={userLoc}
-                resources={filtered}
-                selectedResourceId={selectedResourceId}
-                onResourceSelect={(resource) => openResource(resource.id)}
-                searchRadius={radius}
-                apiKey={apiKey}
-              />
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filtered.map((r) => (
-                  <ResourceCard 
-                    key={r.id} 
-                    resource={r}
-                    isSelected={selectedResourceId === r.id}
-                    onSelect={() => openResource(r.id)}
+          <section aria-labelledby="results-heading" className="mt-8" role="region">
+            <h2 id="results-heading" className="sr-only">Search results</h2>
+            {userLoc ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {filtered.length} result{filtered.length === 1 ? "" : "s"} found
+                  </p>
+                </div>
+                {showMap ? (
+                  <GoogleMap
+                    center={userLoc}
+                    resources={filtered}
+                    selectedResourceId={selectedResourceId}
+                    onResourceSelect={(resource) => openResource(resource.id)}
+                    searchRadius={radius}
+                    apiKey={apiKey}
                   />
-                ))}
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {filtered.map((r) => (
+                      <ResourceCard 
+                        key={r.id} 
+                        resource={r}
+                        isSelected={selectedResourceId === r.id}
+                        onSelect={() => openResource(r.id)}
+                        isFavorite={isFavorite(r.id)}
+                        onToggleFavorite={() => toggleFavorite(r.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+                {filtered.length === 0 && !fetchingPlaces && (
+                  <Card>
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      No resources within {radius} km. Try increasing the radius or searching in a different area.
+                    </CardContent>
+                  </Card>
+                )}
+                {fetchingPlaces && (
+                  <Card>
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      Loading nearby places from Google Maps...
+                    </CardContent>
+                  </Card>
+                )}
               </div>
-            )}
-            {filtered.length === 0 && !fetchingPlaces && (
-              <Card>
+            ) : (
+              <Card className="border-dashed">
                 <CardContent className="py-8 text-center text-muted-foreground">
-                  No resources within {radius} km. Try increasing the radius or searching in a different area.
+                  Results will appear here after you set a location.
                 </CardContent>
               </Card>
             )}
-            {fetchingPlaces && (
-              <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  Loading nearby places from Google Maps...
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="py-8 text-center text-muted-foreground">
-              Results will appear here after you set a location.
-            </CardContent>
-          </Card>
-        )}
-      </section>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="favorites" className="space-y-6">
+          <FavoritesSection 
+            resources={resources} 
+            onResourceSelect={(resource) => openResource(resource.id)} 
+          />
+        </TabsContent>
+
+        <TabsContent value="emergency" className="space-y-6">
+          <EmergencySection />
+        </TabsContent>
+      </Tabs>
 
       {/* Details Dialog */}
       <Dialog open={!!selectedResource} onOpenChange={(o) => !o && closeResource()}>
@@ -436,11 +486,15 @@ export default function SupportSearch() {
 function ResourceCard({ 
   resource, 
   isSelected = false, 
-  onSelect 
+  onSelect,
+  isFavorite = false,
+  onToggleFavorite
 }: { 
   resource: Resource & { distance?: number };
   isSelected?: boolean;
   onSelect?: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }) {
   const { openWith } = useChat();
   const navigate = useNavigate();
@@ -454,7 +508,7 @@ function ResourceCard({
     >
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
-          <div>
+          <div className="flex-1">
             <CardTitle className="text-lg leading-tight">
               {resource.name}
             </CardTitle>
@@ -462,7 +516,22 @@ function ResourceCard({
               {resource.city}{resource.state ? `, ${resource.state}` : ""} · {resource.country}
             </div>
           </div>
-          <Badge>{resource.category}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge>{resource.category}</Badge>
+            {onToggleFavorite && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite();
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
