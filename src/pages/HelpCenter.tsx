@@ -1,6 +1,8 @@
 import { useEffect } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const HelpCenter = () => {
+  const { t } = useLanguage();
   useEffect(() => {
     // Title
     const previousTitle = document.title;
@@ -72,9 +74,9 @@ const HelpCenter = () => {
     <div>
       <header className="border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-10">
-          <h1 className="text-4xl font-bold tracking-tight">Help Center</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{t('help.title')}</h1>
           <p className="mt-2 text-muted-foreground max-w-2xl">
-            Find answers to common questions and learn how to get the most out of CareConnect when searching for cancer support resources.
+            {t('help.subtitle')}
           </p>
         </div>
       </header>
@@ -82,30 +84,30 @@ const HelpCenter = () => {
       <main className="container mx-auto px-4 py-10">
         <section className="grid gap-6 md:grid-cols-2">
           <article className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-xl font-semibold">Getting Started</h2>
+            <h2 className="text-xl font-semibold">{t('help.getting_started')}</h2>
             <p className="mt-2 text-muted-foreground">
-              Use the search on the home page to enter your city or postcode. Apply filters like distance and category to refine results.
+              {t('help.getting_started_text')}
             </p>
           </article>
 
           <article className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-xl font-semibold">Saving Favorites</h2>
+            <h2 className="text-xl font-semibold">{t('help.saving_favorites')}</h2>
             <p className="mt-2 text-muted-foreground">
-              Tap the heart icon on any result to save it for quick access later in your favorites list.
+              {t('help.saving_favorites_text')}
             </p>
           </article>
 
           <article className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-xl font-semibold">Contacting Providers</h2>
+            <h2 className="text-xl font-semibold">{t('help.contacting_providers')}</h2>
             <p className="mt-2 text-muted-foreground">
-              Open a resource to view phone, website, and location details. Always verify hours and availability before visiting.
+              {t('help.contacting_providers_text')}
             </p>
           </article>
 
           <article className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-xl font-semibold">Language Support</h2>
+            <h2 className="text-xl font-semibold">{t('help.language_support')}</h2>
             <p className="mt-2 text-muted-foreground">
-              Use the language selector to browse resources in your preferred language where available.
+              {t('help.language_support_text')}
             </p>
           </article>
         </section>

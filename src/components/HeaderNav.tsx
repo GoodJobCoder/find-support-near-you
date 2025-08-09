@@ -1,6 +1,8 @@
 import { NavLink } from "react-router-dom";
+import { useLanguage } from "@/context/LanguageContext";
 
 const HeaderNav = () => {
+  const { t } = useLanguage();
   const linkBase =
     "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors";
   const getLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -19,10 +21,10 @@ const HeaderNav = () => {
         </NavLink>
         <div className="flex items-center gap-1">
           <NavLink to="/" end className={getLinkClass}>
-            Home
+            {t('nav.home')}
           </NavLink>
           <NavLink to="/help" className={getLinkClass}>
-            Help Center
+            {t('nav.help')}
           </NavLink>
         </div>
       </div>
