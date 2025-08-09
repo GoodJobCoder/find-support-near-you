@@ -537,7 +537,10 @@ export default function SupportSearch() {
         </TabsContent>
 
         <TabsContent value="favorites" className="space-y-4">
-          <FavoritesSection />
+          <FavoritesSection 
+            resources={resources}
+            onResourceSelect={(resource) => openResource(resource.id)}
+          />
         </TabsContent>
 
         <TabsContent value="comparison" className="space-y-4">
