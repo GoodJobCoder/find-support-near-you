@@ -23,6 +23,7 @@ import FavoritesSection from "./FavoritesSection";
 import LanguageSelector from "./LanguageSelector";
 import AvailabilityStatus from "./AvailabilityStatus";
 import { useLanguage } from "@/context/LanguageContext";
+import { filterCancerResources } from "@/lib/aiFilter";
 
 interface LatLng { lat: number; lng: number }
 
@@ -262,10 +263,18 @@ export default function SupportSearch() {
       const detailedResults = await Promise.all(detailPromises);
       const validResources = detailedResults.filter((resource): resource is Resource => resource !== null);
 
-      setResources(validResources);
+      // Internal AI filter: keep only cancer-related locations using Gemini (if key present)
+      let finalResources = validResources;
+      try {
+        finalResources = await filterCancerResources(validResources);
+      } catch (e) {
+        console.warn("AI filtering failed; showing unfiltered results", e);
+      }
+
+      setResources(finalResources);
       toast({ 
         title: "Places loaded", 
-        description: `Found ${validResources.length} nearby resources with detailed information.` 
+        description: `Found ${finalResources.length} nearby resources with detailed information.` 
       });
     } catch (error) {
       console.error("Error fetching places:", error);
