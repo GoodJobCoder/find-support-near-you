@@ -2,9 +2,11 @@ import React from "react";
 import { Resource } from "@/data/resources";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, Globe, ExternalLink } from "lucide-react";
+import { MapPin, Phone, Globe, ExternalLink, MessageSquare } from "lucide-react";
+import { useChat } from "@/context/ChatContext";
 
 export default function ResourceDetails({ resource }: { resource: Resource & { distance?: number } }) {
+  const { openWith } = useChat();
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
@@ -33,6 +35,30 @@ export default function ResourceDetails({ resource }: { resource: Resource & { d
       )}
 
       <div className="flex flex-wrap gap-2 pt-2">
+        <Button
+          size="sm"
+          onClick={() =>
+            openWith({
+              resource: {
+                id: (resource as any).id,
+                name: resource.name,
+                category: String((resource as any).category ?? ""),
+                address: resource.address,
+                city: resource.city,
+                state: (resource as any).state,
+                country: resource.country,
+                phone: (resource as any).phone,
+                website: (resource as any).website,
+                lat: (resource as any).lat,
+                lng: (resource as any).lng,
+              },
+            })
+          }
+        >
+          <span className="inline-flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" /> Chat about this location
+          </span>
+        </Button>
         {resource.phone && (
           <Button asChild variant="secondary" size="sm">
             <a href={`tel:${resource.phone}`} className="inline-flex items-center gap-2">

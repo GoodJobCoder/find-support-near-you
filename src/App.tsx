@@ -7,23 +7,26 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ChatWidget from "./components/ChatWidget";
 import { GoogleMapsProvider } from "./hooks/useGoogleMaps";
+import { ChatProvider } from "./context/ChatContext";
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <GoogleMapsProvider apiKey="AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k"/*hide API key later */>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <ChatWidget />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+    <GoogleMapsProvider apiKey="AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k">
+      <ChatProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <ChatWidget />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ChatProvider>
     </GoogleMapsProvider>
   </QueryClientProvider>
 );
