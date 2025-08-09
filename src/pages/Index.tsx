@@ -4,7 +4,7 @@ const Index = () => {
   return (
     <>
       <header className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[hsl(var(--brand-1))] via-[hsl(var(--brand-3))] to-[hsl(var(--brand-2))] opacity-20" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[hsl(var(--brand-1))] via-[hsl(var(--brand-3))] to-[hsl(var(--brand-2))] opacity-30" />
         <div className="container py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">

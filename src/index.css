@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 340 82% 60%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -53,6 +53,16 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Brand design tokens */
+    --brand-1: 340 82% 60%; /* pink primary */
+    --brand-2: 330 85% 65%; /* rose */
+    --brand-3: 340 90% 80%; /* glow */
+
+    --shadow-elevate: 0 10px 30px -12px hsl(var(--brand-1) / 0.25);
+    --shadow-glow: 0 0 50px hsl(var(--brand-3) / 0.25);
+
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
@@ -65,7 +75,7 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 340 82% 65%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -92,15 +102,10 @@ All colors MUST be HSL.
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Brand design tokens for dark mode */
-    --brand-1: 262 83% 70%;
-    --brand-2: 318 73% 68%;
-    --brand-3: 262 83% 60%;
-
-    /* Brand design tokens */
-    --brand-1: 262 83% 54%; /* violet */
-    --brand-2: 318 73% 57%; /* magenta */
-    --brand-3: 262 83% 72%; /* glow */
+    /* Brand design tokens (dark mode) */
+    --brand-1: 340 82% 70%; /* pink primary (dark) */
+    --brand-2: 330 85% 68%; /* rose (dark) */
+    --brand-3: 340 90% 72%; /* glow (dark) */
 
     --shadow-elevate: 0 10px 30px -12px hsl(var(--brand-1) / 0.25);
     --shadow-glow: 0 0 50px hsl(var(--brand-3) / 0.25);
