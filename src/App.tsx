@@ -11,7 +11,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <GoogleMapsProvider apiKey="AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k">
+    <GoogleMapsProvider apiKey="AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k"/*hide API key later */>
       <TooltipProvider>
         <Toaster />
         <Sonner />
