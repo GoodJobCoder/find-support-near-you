@@ -1,35 +1,26 @@
-import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 
-export const VideosSection = () => {
+export const VideosSection = ({ query }: { query: string }) => {
   const { t } = useLanguage();
-  const [q, setQ] = useState('');
-
-  const ytSearch = (base: string) => `${base}${encodeURIComponent(q || 'cancer clinical trials')}`;
+  const q = encodeURIComponent((query || 'cancer clinical trials').trim());
+  const ytSearch = `https://www.youtube.com/results?search_query=${q}`;
+  const nciSearch = `https://www.youtube.com/@NCIgov/search?query=${q}`;
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-        <Input
-          placeholder={t('trials.search_placeholder')}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <div className="flex gap-2">
-          <Button asChild>
-            <a href={ytSearch('https://www.youtube.com/results?search_query=')} target="_blank" rel="noreferrer">
-              {t('videos.search')} YouTube
-            </a>
-          </Button>
-          <Button variant="secondary" asChild>
-            <a href={ytSearch('https://www.youtube.com/@NCIgov/search?query=')} target="_blank" rel="noreferrer">
-              NCI
-            </a>
-          </Button>
-        </div>
+      <div className="flex gap-2 flex-wrap">
+        <Button asChild>
+          <a href={ytSearch} target="_blank" rel="noreferrer">
+            {t('videos.search')} YouTube
+          </a>
+        </Button>
+        <Button variant="secondary" asChild>
+          <a href={nciSearch} target="_blank" rel="noreferrer">
+            NCI
+          </a>
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

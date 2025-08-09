@@ -1,7 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 
 interface TrialField {
@@ -14,53 +12,37 @@ interface TrialField {
   BriefSummary: string[];
 }
 
-export const TrialsSearch = () => {
+export const TrialsSearch = ({ query }: { query: string }) => {
   const { t } = useLanguage();
-  const [q, setQ] = useState('');
-  const [loc, setLoc] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<TrialField[]>([]);
 
-  const onSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setResults([]);
-    try {
-      const expr = encodeURIComponent(`${q} ${loc}`.trim());
-      const fields = [
-        'NCTId','BriefTitle','Condition','LocationCity','LocationCountry','OverallStatus','BriefSummary'
-      ].join(',');
-      const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=${fields}&min_rnk=1&max_rnk=20&fmt=json`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const arr = (data?.StudyFieldsResponse?.StudyFields || []) as TrialField[];
-      setResults(arr);
-    } catch (e: any) {
-      setError(e?.message || t('shared.error'));
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const run = async () => {
+      const q = (query || '').trim();
+      if (!q) { setResults([]); return; }
+      setLoading(true);
+      setError(null);
+      try {
+        const expr = encodeURIComponent(q);
+        const fields = ['NCTId','BriefTitle','Condition','LocationCity','LocationCountry','OverallStatus','BriefSummary'].join(',');
+        const url = `https://clinicaltrials.gov/api/query/study_fields?expr=${expr}&fields=${fields}&min_rnk=1&max_rnk=20&fmt=json`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const arr = (data?.StudyFieldsResponse?.StudyFields || []) as TrialField[];
+        setResults(arr);
+      } catch (e: any) {
+        setError(e?.message || t('shared.error'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    run();
+  }, [query]);
 
   return (
     <div className="space-y-4">
-      <form onSubmit={onSearch} className="grid gap-3 md:grid-cols-[2fr_1fr_auto]">
-        <Input
-          placeholder={t('trials.search_placeholder')}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          required
-        />
-        <Input
-          placeholder={t('trials.location_placeholder')}
-          value={loc}
-          onChange={(e) => setLoc(e.target.value)}
-        />
-        <Button type="submit" disabled={loading}>{loading ? t('shared.loading') : t('trials.search')}</Button>
-      </form>
-
       {error && <div className="text-destructive text-sm">{error}</div>}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
