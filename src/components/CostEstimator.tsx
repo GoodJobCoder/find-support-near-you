@@ -150,7 +150,12 @@ export default function CostEstimator() {
         const res = await fetch(SHEET_CSV_URL);
         if (!res.ok) throw new Error(`Failed to fetch data (${res.status})`);
         const text = await res.text();
-        const parsed = Papa.parse<Record<string, unknown>>(text, {
+        // Clean preface rows so the header begins at "Cancer Site,..."
+        const lines = text.split(/\r?\n/);
+        const headerIdx = lines.findIndex((l) => /^Cancer Site,/i.test(l.trim()));
+        const cleanText = headerIdx >= 0 ? lines.slice(headerIdx).join("\n") : text;
+
+        const parsed = Papa.parse<Record<string, unknown>>(cleanText, {
           header: true,
           dynamicTyping: false,
           skipEmptyLines: true,
