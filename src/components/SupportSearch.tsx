@@ -47,7 +47,7 @@ function haversine(a: LatLng, b: LatLng) {
 const categories = ["All", "Support Group", "Treatment Center", "Counseling", "Financial Aid", "Hospice", "Transportation"] as const;
 
 export default function SupportSearch() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All");
   const [radius, setRadius] = useState<number>(25);
@@ -266,7 +266,7 @@ export default function SupportSearch() {
       // Internal AI filter: keep only cancer-related locations using Gemini (if key present)
       let finalResources = validResources;
       try {
-        finalResources = await filterCancerResources(validResources);
+        finalResources = await filterCancerResources(validResources, language);
       } catch (e) {
         console.warn("AI filtering failed; showing unfiltered results", e);
       }
