@@ -190,7 +190,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
       <div ref={mapRef} className="w-full h-full" />
       
       {/* Map Legend */}
-      <div className="absolute top-16 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
+      <div className="absolute top-24 left-4 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
         <h4 className="font-semibold text-sm mb-2 text-foreground">Categories</h4>
         <div className="space-y-1">
           {Object.entries(categoryColors).map(([category, color]) => (
