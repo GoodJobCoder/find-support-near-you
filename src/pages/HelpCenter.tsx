@@ -1,9 +1,9 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { useSEO } from "@/hooks/useSEO";
+import CostEstimator from "@/components/CostEstimator";
 
 const HelpCenter = () => {
   const { t } = useLanguage();
-  
   // SEO configuration
   useSEO({
     title: "Help Center | CareConnect",
@@ -76,6 +76,10 @@ const HelpCenter = () => {
             <p className="mt-2 text-muted-foreground">
               {t('help.language_support_text')}
             </p>
+          </article>
+
+          <article className="rounded-lg border border-border bg-card p-6 shadow-sm md:col-span-3">
+            <CostEstimator />
           </article>
         </section>
       </main>
