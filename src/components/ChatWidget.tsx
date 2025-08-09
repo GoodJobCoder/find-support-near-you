@@ -138,9 +138,9 @@ export default function ChatWidget() {
   };
 
   return (
-    <>
+    <div className="pointer-events-none fixed inset-0 z-[9999]">
       {open && (
-        <div className="fixed bottom-20 right-4 z-50 w-[min(360px,92vw)]">
+        <div className="pointer-events-auto fixed bottom-20 right-4 z-[60] w-[min(360px,92vw)]">
           <Card className="border border-border/60 shadow-lg overflow-hidden">
             <div className="flex items-center justify-between px-3 py-2 bg-primary/10">
               <div className="text-sm font-medium">Support Assistant</div>
@@ -177,10 +177,15 @@ export default function ChatWidget() {
       <Button
         aria-label="Open chat"
         onClick={() => setOpen(!open)}
-        className="fixed bottom-4 right-4 z-50 shadow-lg"
+        className="pointer-events-auto fixed bottom-4 right-4 z-[50] shadow-lg transform-gpu will-change-transform"
+        style={{ 
+          position: 'fixed',
+          bottom: '1rem',
+          right: '1rem'
+        }}
       >
         <MessageSquare className="mr-2 h-4 w-4" /> Chat
       </Button>
-    </>
+    </div>
   );
 }
