@@ -33,10 +33,7 @@ function haversine(a: LatLng, b: LatLng) {
   return R * c;
 }
 
-const categories: ("All" | ResourceCategory)[] = [
-  "All",
-  ...Array.from(new Set(resources.map((r) => r.category))) as ResourceCategory[],
-];
+const categories = ["All", "Support Group", "Treatment Center", "Counseling", "Financial Aid", "Hospice", "Transportation"] as const;
 
 export default function SupportSearch() {
   const [query, setQuery] = useState("");
@@ -47,7 +44,7 @@ export default function SupportSearch() {
   const [mode, setMode] = useState<"address" | "zipcode" | "city">("address");
   const [showMap, setShowMap] = useState(false);
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState("AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k");
+  const apiKey = "AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k";
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -206,12 +203,7 @@ export default function SupportSearch() {
 
           {/* Map Toggle */}
           {userLoc && filtered.length > 0 && (
-            <MapToggle
-              showMap={showMap}
-              onToggle={setShowMap}
-              apiKey={apiKey}
-              onApiKeyChange={() => {}}
-            />
+            <MapToggle showMap={showMap} onToggle={setShowMap} />
           )}
 
           <div className="pt-2 text-sm text-muted-foreground">
@@ -244,7 +236,7 @@ export default function SupportSearch() {
                 selectedResourceId={selectedResourceId}
                 onResourceSelect={(resource) => openResource(resource.id)}
                 searchRadius={radius}
-                apiKey="AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k"
+                apiKey={apiKey}
               />
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

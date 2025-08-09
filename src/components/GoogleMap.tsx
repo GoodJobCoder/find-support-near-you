@@ -34,16 +34,14 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Category colors for markers
-  const categoryColors = {
+  // Category colors for markers - using semantic colors
+  const categoryColors: Record<string, string> = {
     'Treatment Center': '#ec4899', // pink-500
     'Support Group': '#8b5cf6',   // violet-500
     'Counseling': '#06b6d4',      // cyan-500
     'Financial Aid': '#10b981',   // emerald-500
     'Transportation': '#f59e0b',  // amber-500
-    'Housing': '#ef4444',         // red-500
-    'Pharmacy': '#3b82f6',        // blue-500
-    'Research': '#6366f1',        // indigo-500
+    'Hospice': '#ef4444',         // red-500
   };
 
   // Initialize Google Maps
@@ -122,7 +120,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
       fillOpacity: 0.1,
       map: mapInstanceRef.current,
       center,
-      radius: searchRadius * 1609.34, // Convert miles to meters
+      radius: searchRadius * 1000, // Convert km to meters
     });
   }, [center, searchRadius]);
 
@@ -157,7 +155,7 @@ const GoogleMap: React.FC<GoogleMapProps> = ({
             <p class="text-sm text-gray-600 mb-2">${resource.category}</p>
             <p class="text-sm mb-2">${resource.address}, ${resource.city}${resource.state ? ', ' + resource.state : ''}</p>
             ${resource.phone ? `<p class="text-sm mb-2">📞 ${resource.phone}</p>` : ''}
-            ${resource.distance ? `<p class="text-sm mb-3">📍 ${resource.distance.toFixed(1)} miles away</p>` : ''}
+            ${resource.distance ? `<p class="text-sm mb-3">📍 ${resource.distance.toFixed(1)} km away</p>` : ''}
             <div class="flex gap-2">
               ${resource.website ? `<a href="${resource.website}" target="_blank" class="inline-flex items-center px-3 py-1 bg-pink-500 text-white text-xs rounded hover:bg-pink-600 transition-colors">Visit Website</a>` : ''}
               <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(resource.address + ', ' + resource.city + ', ' + resource.state)}', '_blank')" class="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors">Get Directions</button>
