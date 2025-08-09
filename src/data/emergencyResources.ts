@@ -30,7 +30,7 @@ export const emergencyResources: EmergencyResource[] = [
     phone: '1-888-793-9355',
     description: 'Emotional support for cancer patients and families',
     available: 'Mon-Fri 9AM-9PM EST',
-    website: 'https://www.cancersupporthelpline.org'
+    website: 'https://www.cancersupportcommunity.org/cancer-support-helpline'
   },
   {
     id: 'american-cancer-society',
