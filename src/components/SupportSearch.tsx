@@ -284,7 +284,7 @@ export default function SupportSearch() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="search">Search Resources</TabsTrigger>
-          <TabsTrigger value="favorites">Favorites ({favorites.length})</TabsTrigger>
+          <TabsTrigger value="favorites">Favorites ({resources.filter(r => favorites.includes(r.id)).length})</TabsTrigger>
           <TabsTrigger value="emergency">Emergency Support</TabsTrigger>
         </TabsList>
         
