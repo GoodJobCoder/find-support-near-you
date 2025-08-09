@@ -21,18 +21,17 @@ const Index = () => {
           <div className="mx-auto mt-10 max-w-4xl w-full">
             <SupportSearch />
           </div>
+          
+          {/* Footnote within background */}
+          <div className="mx-auto mt-8 max-w-4xl">
+            <article className="rounded-lg border border-border/70 bg-card/80 backdrop-blur-sm p-6 leading-relaxed text-sm text-muted-foreground">
+              <p>
+                This tool helps you quickly locate trusted cancer support organizations around you. Use your current location or search by city/postcode, then filter by category and distance.
+              </p>
+            </article>
+          </div>
         </div>
       </header>
-
-      <main className="container pb-20">
-        <section className="mx-auto max-w-4xl">
-          <article className="rounded-lg border border-border/70 bg-card/80 p-6 leading-relaxed text-sm text-muted-foreground">
-            <p>
-              This tool helps you quickly locate trusted cancer support organizations around you. Use your current location or search by city/postcode, then filter by category and distance.
-            </p>
-          </article>
-        </section>
-      </main>
     </div>
   );
 };
