@@ -8,6 +8,8 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { resources, Resource, ResourceCategory } from "@/data/resources";
 import { MapPin, Navigation, Search, Globe2, ExternalLink, Phone } from "lucide-react";
+import GoogleMap from "./GoogleMap";
+import MapToggle from "./MapToggle";
 
 interface LatLng { lat: number; lng: number }
 
@@ -40,6 +42,15 @@ export default function SupportSearch() {
   const [userLoc, setUserLoc] = useState<LatLng | null>(null);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"address" | "zipcode" | "city">("address");
+  const [showMap, setShowMap] = useState(false);
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('googleMapsApiKey') || '');
+
+  // Save API key to localStorage
+  const handleApiKeyChange = useCallback((key: string) => {
+    setApiKey(key);
+    localStorage.setItem('googleMapsApiKey', key);
+  }, []);
 
   const doGeolocate = useCallback(() => {
     if (!("geolocation" in navigator)) {
@@ -165,6 +176,16 @@ export default function SupportSearch() {
             </div>
           </div>
 
+          {/* Map Toggle */}
+          {userLoc && filtered.length > 0 && (
+            <MapToggle
+              showMap={showMap}
+              onToggle={setShowMap}
+              apiKey={apiKey}
+              onApiKeyChange={handleApiKeyChange}
+            />
+          )}
+
           <div className="pt-2 text-sm text-muted-foreground">
             {userLoc ? (
               <div className="flex items-center gap-2">
@@ -188,11 +209,27 @@ export default function SupportSearch() {
                 {filtered.length} result{filtered.length === 1 ? "" : "s"} found
               </p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((r) => (
-                <ResourceCard key={r.id} resource={r} />
-              ))}
-            </div>
+            {showMap ? (
+              <GoogleMap
+                center={userLoc}
+                resources={filtered}
+                selectedResourceId={selectedResourceId}
+                onResourceSelect={(resource) => setSelectedResourceId(resource.id)}
+                searchRadius={radius}
+                apiKey={apiKey}
+              />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filtered.map((r) => (
+                  <ResourceCard 
+                    key={r.id} 
+                    resource={r}
+                    isSelected={selectedResourceId === r.id}
+                    onSelect={() => setSelectedResourceId(r.id)}
+                  />
+                ))}
+              </div>
+            )}
             {filtered.length === 0 && (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">
@@ -217,9 +254,22 @@ export default function SupportSearch() {
   );
 }
 
-function ResourceCard({ resource }: { resource: Resource & { distance?: number } }) {
+function ResourceCard({ 
+  resource, 
+  isSelected = false, 
+  onSelect 
+}: { 
+  resource: Resource & { distance?: number };
+  isSelected?: boolean;
+  onSelect?: () => void;
+}) {
   return (
-    <Card className="group border border-border/70 hover:border-primary/60 transition-all duration-300 hover:shadow-md">
+    <Card 
+      className={`group border border-border/70 hover:border-primary/60 transition-all duration-300 hover:shadow-md cursor-pointer ${
+        isSelected ? 'ring-2 ring-primary' : ''
+      }`}
+      onClick={onSelect}
+    >
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
