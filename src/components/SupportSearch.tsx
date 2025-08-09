@@ -1,305 +1,141 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, MapPin, Phone, Globe, Search, Locate, ExternalLink, MessageSquare } from "lucide-react";
-import { Resource, ResourceCategory, resources as staticResources } from "@/data/resources";
-import GoogleMap from "./GoogleMap";
-import { useGoogleMaps } from "@/hooks/useGoogleMaps";
-import { useToast } from "@/hooks/use-toast";
-import { useChat } from "@/context/ChatContext";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { useFavorites } from "@/hooks/useFavorites";
-import MapToggle from "./MapToggle";
-import ResourceDetails from "./ResourceDetails";
-import EmergencySection from "./EmergencySection";
-import FavoritesSection from "./FavoritesSection";
-import LanguageSelector from "./LanguageSelector";
-import AvailabilityStatus from "./AvailabilityStatus";
-import { useLanguage } from "@/context/LanguageContext";
-import { filterCancerResources } from "@/lib/aiFilter";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MapPin } from 'lucide-react';
+import { Resource, ResourceCategory } from '@/data/resources';
+import GoogleMap from './GoogleMap';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useFavorites } from '@/hooks/useFavorites';
+import MapToggle from './MapToggle';
+import ResourceDetails from './ResourceDetails';
+import EmergencySection from './EmergencySection';
+import FavoritesSection from './FavoritesSection';
+import LanguageSelector from './LanguageSelector';
+import { useLanguage } from '@/context/LanguageContext';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { useGeocoding } from '@/hooks/useGeocoding';
+import { usePlacesSearch } from '@/hooks/usePlacesSearch';
+import { filterResourcesByDistance } from '@/utils/distance';
+import { SearchInput } from '@/components/search/SearchInput';
+import { SearchFilters } from '@/components/search/SearchFilters';
+import { ResourceCard } from '@/components/search/ResourceCard';
 
-interface LatLng { lat: number; lng: number }
-
-function haversine(a: LatLng, b: LatLng) {
-  const R = 6371; // km
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLon = ((b.lng - a.lng) * Math.PI) / 180;
-  const lat1 = (a.lat * Math.PI) / 180;
-  const lat2 = (b.lat * Math.PI) / 180;
-
-  const sinDlat = Math.sin(dLat / 2);
-  const sinDlon = Math.sin(dLon / 2);
-  const c = 2 * Math.asin(
-    Math.sqrt(
-      sinDlat * sinDlat + Math.cos(lat1) * Math.cos(lat2) * sinDlon * sinDlon
-    )
-  );
-  return R * c;
+interface LatLng {
+  lat: number;
+  lng: number;
 }
 
-const categories = ["All", "Support Group", "Treatment Center", "Counseling", "Financial Aid", "Hospice", "Transportation"] as const;
+type SearchMode = 'address' | 'zipcode' | 'city';
+type Category = 'All' | ResourceCategory;
 
 export default function SupportSearch() {
   const { t, language } = useLanguage();
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<(typeof categories)[number]>("All");
-  const [radius, setRadius] = useState<number>(25);
-  const [userLoc, setUserLoc] = useState<LatLng | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"address" | "zipcode" | "city">("address");
-  const [showMap, setShowMap] = useState(false);
-  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [fetchingPlaces, setFetchingPlaces] = useState(false);
-  const [activeTab, setActiveTab] = useState("search");
-  const { isLoaded: googleMapsLoaded, error: googleMapsError } = useGoogleMaps();
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
-  const { toast } = useToast();
-  const apiKey = "AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k";
-
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
+  // Search state
+  const [query, setQuery] = useState('');
+  const [mode, setMode] = useState<SearchMode>('address');
+  const [category, setCategory] = useState<Category>('All');
+  const [radius, setRadius] = useState(25);
+  
+  // Location state
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [resources, setResources] = useState<Resource[]>([]);
+  
+  // UI state
+  const [activeTab, setActiveTab] = useState('search');
+  const [showMap, setShowMap] = useState(false);
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  
+  // Hooks
+  const { getCurrentPosition, loading: geoLoading } = useGeolocation();
+  const { geocode, loading: geocodeLoading } = useGeocoding();
+  const { searchNearbyPlaces, loading: placesLoading } = usePlacesSearch();
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+
+  const loading = geoLoading || geocodeLoading || placesLoading;
+
+  // Handle URL params for selected resource
   useEffect(() => {
-    const id = searchParams.get('resource');
-    setSelectedResourceId(id);
+    const resourceId = searchParams.get('resource');
+    setSelectedResourceId(resourceId);
   }, [searchParams]);
 
-
-  const doGeolocate = useCallback(() => {
-    if (!("geolocation" in navigator)) {
-      toast({ title: "Geolocation not supported", description: "Your browser does not support location access." });
-      return;
-    }
-    setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLoc({ lat: latitude, lng: longitude });
-        setLoading(false);
-        toast({ title: "Location set", description: "Using your current location." });
-      },
-      (err) => {
-        setLoading(false);
-        toast({ title: "Location denied", description: err.message });
-      },
-      { enableHighAccuracy: true, maximumAge: 60_000, timeout: 10_000 }
-    );
-  }, []);
-
-  const geocode = useCallback(async () => {
-    if (!query.trim()) {
-      toast({ title: "Enter a place", description: "Type a city, postcode, or address." });
-      return;
-    }
+  // Handle location search
+  const handleLocationSearch = useCallback(async () => {
     try {
-      setLoading(true);
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-      const res = await fetch(url, {
-        headers: {
-          "Accept": "application/json",
-        },
-      });
-      const data: any[] = await res.json();
-      if (!data.length) {
-        toast({ title: "No match found", description: "Try a different place or use your location." });
-        setLoading(false);
-        return;
-      }
-      const top = data[0];
-      setUserLoc({ lat: parseFloat(top.lat), lng: parseFloat(top.lon) });
-      toast({ title: "Location set", description: top.display_name });
-    } catch (e: any) {
-      toast({ title: "Geocoding failed", description: e?.message ?? "Please try again." });
-    } finally {
-      setLoading(false);
+      const result = await geocode(query);
+      setUserLocation(result.position);
+    } catch (error) {
+      console.error('Geocoding failed:', error);
     }
-  }, [query]);
+  }, [geocode, query]);
 
-  const filtered = useMemo(() => {
-    if (!userLoc) return [] as (Resource & { distance: number })[];
-    let filteredResources = resources
-      .filter((r) => (category === "All" ? true : r.category === category))
-      .map((r) => ({ ...r, distance: haversine(userLoc, { lat: r.lat, lng: r.lng }) }))
-      .filter((r) => r.distance <= radius);
+  // Handle current location
+  const handleUseCurrentLocation = useCallback(async () => {
+    try {
+      const position = await getCurrentPosition();
+      setUserLocation(position);
+    } catch (error) {
+      console.error('Geolocation failed:', error);
+    }
+  }, [getCurrentPosition]);
 
+  // Fetch places when location changes
+  useEffect(() => {
+    if (userLocation) {
+      searchNearbyPlaces(userLocation, radius, language)
+        .then(setResources)
+        .catch(console.error);
+    }
+  }, [userLocation, radius, language, searchNearbyPlaces]);
+
+  // Filter and sort resources
+  const filteredResources = useMemo(() => {
+    if (!userLocation) return [];
     
-    return filteredResources.sort((a, b) => a.distance - b.distance);
-  }, [userLoc, category, radius, resources]);
+    let filtered = resources;
+    if (category !== 'All') {
+      filtered = filtered.filter(resource => resource.category === category);
+    }
+    
+    return filterResourcesByDistance(filtered, userLocation, radius);
+  }, [resources, userLocation, category, radius]);
 
+  // Selected resource details
   const selectedResource = useMemo(() => {
     if (!selectedResourceId) return null;
-    return (
-      filtered.find((r) => r.id === selectedResourceId) ||
-      resources.find((r) => r.id === selectedResourceId) ||
-      null
-    );
-  }, [selectedResourceId, filtered]);
+    return filteredResources.find(r => r.id === selectedResourceId) ||
+           resources.find(r => r.id === selectedResourceId) ||
+           null;
+  }, [selectedResourceId, filteredResources, resources]);
 
+  // Resource selection handlers
   const openResource = useCallback((id: string) => {
     setSelectedResourceId(id);
-    const params = new URLSearchParams(window.location.search);
-    params.set("resource", id);
+    const params = new URLSearchParams(searchParams);
+    params.set('resource', id);
     navigate({ search: params.toString() }, { replace: false });
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const closeResource = useCallback(() => {
     setSelectedResourceId(null);
-    const params = new URLSearchParams(window.location.search);
-    params.delete("resource");
+    const params = new URLSearchParams(searchParams);
+    params.delete('resource');
     navigate({ search: params.toString() }, { replace: false });
-  }, [navigate]);
-
-  const fetchNearbyPlaces = useCallback(async (location: LatLng) => {
-    if (!googleMapsLoaded || !window.google?.maps?.places) {
-      toast({ title: "Maps not loaded", description: "Please wait for Google Maps to load." });
-      return;
-    }
-
-    setFetchingPlaces(true);
-    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-    const newResources: Resource[] = [];
-
-    // Define search queries for different categories
-    const searchQueries: { category: ResourceCategory; keywords: string[] }[] = [
-      { category: "Support Group", keywords: ["cancer support group", "support group", "patient support"] },
-      { category: "Treatment Center", keywords: ["cancer center", "oncology center", "hospital oncology", "cancer treatment"] },
-      { category: "Counseling", keywords: ["cancer counseling", "oncology counselor", "therapy"] },
-      { category: "Financial Aid", keywords: ["cancer financial assistance", "patient financial services", "charity financial aid"] },
-      { category: "Hospice", keywords: ["hospice care", "palliative care", "end of life care"] },
-      { category: "Transportation", keywords: ["medical transport", "patient transport", "healthcare transport"] }
-    ];
-
-    try {
-      const promises = searchQueries.map(({ category, keywords }) => 
-        Promise.all(keywords.map(keyword => 
-          new Promise<google.maps.places.PlaceResult[]>((resolve) => {
-            const request: google.maps.places.TextSearchRequest = {
-              query: `${keyword} near me`,
-              location: new window.google.maps.LatLng(location.lat, location.lng),
-              radius: radius * 1000, // Convert km to meters
-            };
-
-            service.textSearch(request, (results, status) => {
-              if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
-                resolve(results);
-              } else {
-                resolve([]);
-              }
-            });
-          })
-        ))
-      );
-
-      const allResults = await Promise.all(promises);
-      
-      // Collect unique place IDs to get detailed information
-      const uniquePlaces = new Map<string, { place: google.maps.places.PlaceResult; category: ResourceCategory }>();
-      
-      allResults.forEach((categoryResults, categoryIndex) => {
-        const category = searchQueries[categoryIndex].category;
-        categoryResults.forEach(keywordResults => {
-          keywordResults.forEach(place => {
-            if (place.place_id && place.geometry?.location && place.name) {
-              if (!uniquePlaces.has(place.place_id)) {
-                uniquePlaces.set(place.place_id, { place, category });
-              }
-            }
-          });
-        });
-      });
-
-      // Fetch detailed information for each unique place
-      const detailPromises = Array.from(uniquePlaces.entries()).map(([placeId, { place, category }]) =>
-        new Promise<Resource | null>((resolve) => {
-          const request: google.maps.places.PlaceDetailsRequest = {
-            placeId: placeId,
-            fields: [
-              'place_id', 'name', 'formatted_address', 'vicinity', 
-              'formatted_phone_number', 'website', 'geometry', 
-              'opening_hours', 'rating', 'business_status'
-            ]
-          };
-
-          service.getDetails(request, (placeDetails, status) => {
-            if (status === window.google.maps.places.PlacesServiceStatus.OK && placeDetails) {
-              resolve({
-                id: placeDetails.place_id || placeId,
-                name: placeDetails.name || place.name,
-                category: category,
-                lat: placeDetails.geometry?.location?.lat() || place.geometry!.location!.lat(),
-                lng: placeDetails.geometry?.location?.lng() || place.geometry!.location!.lng(),
-                address: placeDetails.formatted_address || place.formatted_address || "",
-                city: placeDetails.vicinity || place.vicinity || "",
-                country: "United States", // Most results will be US-based
-                phone: placeDetails.formatted_phone_number || undefined,
-                website: placeDetails.website || undefined
-              });
-            } else {
-              // Fallback to basic info if details fetch fails
-              resolve({
-                id: place.place_id!,
-                name: place.name!,
-                category: category,
-                lat: place.geometry!.location!.lat(),
-                lng: place.geometry!.location!.lng(),
-                address: place.formatted_address || "",
-                city: place.vicinity || "",
-                country: "United States",
-                phone: undefined,
-                website: undefined
-              });
-            }
-          });
-        })
-      );
-
-      const detailedResults = await Promise.all(detailPromises);
-      const validResources = detailedResults.filter((resource): resource is Resource => resource !== null);
-
-      // Internal AI filter: keep only cancer-related locations using Gemini (if key present)
-      let finalResources = validResources;
-      try {
-        finalResources = await filterCancerResources(validResources, language);
-      } catch (e) {
-        console.warn("AI filtering failed; showing unfiltered results", e);
-      }
-
-      setResources(finalResources);
-      toast({ 
-        title: "Places loaded", 
-        description: `Found ${finalResources.length} nearby resources with detailed information.` 
-      });
-    } catch (error) {
-      console.error("Error fetching places:", error);
-      toast({ 
-        title: "Error fetching places", 
-        description: "Could not load nearby resources. Please try again." 
-      });
-    } finally {
-      setFetchingPlaces(false);
-    }
-  }, [radius, googleMapsLoaded]);
-
-  // Auto-fetch places when location changes
-  useEffect(() => {
-    if (userLoc) {
-      fetchNearbyPlaces(userLoc);
-    }
-  }, [userLoc, fetchNearbyPlaces]);
+  }, [navigate, searchParams]);
 
   return (
     <section className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="search">{t('search.resources')}</TabsTrigger>
-          <TabsTrigger value="favorites">{t('search.favorites')} ({resources.filter(r => favorites.includes(r.id)).length})</TabsTrigger>
+          <TabsTrigger value="favorites">
+            {t('search.favorites')} ({resources.filter(r => favorites.includes(r.id)).length})
+          </TabsTrigger>
           <TabsTrigger value="emergency">{t('search.emergency')}</TabsTrigger>
         </TabsList>
         
@@ -310,132 +146,85 @@ export default function SupportSearch() {
               <LanguageSelector />
             </CardHeader>
             <CardContent className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-[auto,1fr,auto]">
-            <div className="w-full sm:w-44">
-              <Select value={mode} onValueChange={(v) => setMode(v as any)}>
-                <SelectTrigger aria-label="Search by" className="w-full">
-                  <SelectValue placeholder="Search by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="address">{t('search.address')}</SelectItem>
-                  <SelectItem value="zipcode">{t('search.zipcode')}</SelectItem>
-                  <SelectItem value="city">{t('search.city')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="relative">
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={mode === 'address' ? 'Enter address (e.g., 123 Main St)' : mode === 'zipcode' ? 'ZIP / Postcode (e.g., 10001)' : 'City (e.g., Boston)'}
-                aria-label={mode === 'address' ? 'Address' : mode === 'zipcode' ? 'ZIP code' : 'City'}
-                className="pr-10"
+              <SearchInput
+                query={query}
+                onQueryChange={setQuery}
+                mode={mode}
+                onModeChange={setMode}
+                onSearch={handleLocationSearch}
+                onUseLocation={handleUseCurrentLocation}
+                loading={loading}
               />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="default"
-                disabled={loading || !query.trim()}
-                onClick={geocode}
-              >
-                {t('search.go')}
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={loading}
-                onClick={doGeolocate}
-              >
-                <Locate className="h-4 w-4" /> {t('search.location')}
-              </Button>
-            </div>
-          </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">{t('search.category')}</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as any)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">{t('search.all')}</SelectItem>
-                  {categories.slice(1).map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label className="text-sm font-medium">{t('search.radius')}: {radius} km</Label>
-              <Slider value={[radius]} min={5} max={100} step={5} onValueChange={(v) => setRadius(v[0])} />
-            </div>
-          </div>
+              <SearchFilters
+                category={category}
+                onCategoryChange={setCategory}
+                radius={radius}
+                onRadiusChange={setRadius}
+              />
 
+              {/* Map Toggle */}
+              {userLocation && filteredResources.length > 0 && (
+                <MapToggle showMap={showMap} onToggle={setShowMap} />
+              )}
 
-          {/* Map Toggle */}
-          {userLoc && filtered.length > 0 && (
-            <MapToggle showMap={showMap} onToggle={setShowMap} />
-          )}
-
-          <div className="pt-2 text-sm text-muted-foreground">
-            {userLoc ? (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" /> 
-                Location set. Showing results within {radius} km.
-                {fetchingPlaces && " • Loading nearby places..."}
+              <div className="pt-2 text-sm text-muted-foreground">
+                {userLocation ? (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Location set. Showing results within {radius} km.
+                    {placesLoading && ' • Loading nearby places...'}
+                  </div>
+                ) : (
+                  <div>Tip: set your location to see nearby resources.</div>
+                )}
               </div>
-            ) : (
-              <div>
-                Tip: set your location to see nearby resources.
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
           <section aria-labelledby="results-heading" className="mt-8" role="region">
             <h2 id="results-heading" className="sr-only">Search results</h2>
-            {userLoc ? (
+            {userLocation ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
-                    {filtered.length} result{filtered.length === 1 ? "" : "s"} found
+                    {filteredResources.length} result{filteredResources.length === 1 ? '' : 's'} found
                   </p>
                 </div>
+                
                 {showMap ? (
                   <GoogleMap
-                    center={userLoc}
-                    resources={filtered}
+                    center={userLocation}
+                    resources={filteredResources}
                     selectedResourceId={selectedResourceId}
                     onResourceSelect={(resource) => openResource(resource.id)}
                     searchRadius={radius}
-                    apiKey={apiKey}
+                    apiKey="AIzaSyDU4S7X8HQy4-T0JKL66E54BXoBo8yiy9k"
                   />
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {filtered.map((r) => (
-                      <ResourceCard 
-                        key={r.id} 
-                        resource={r}
-                        isSelected={selectedResourceId === r.id}
-                        onSelect={() => openResource(r.id)}
-                        isFavorite={isFavorite(r.id)}
-                        onToggleFavorite={() => toggleFavorite(r.id)}
+                    {filteredResources.map((resource) => (
+                      <ResourceCard
+                        key={resource.id}
+                        resource={resource}
+                        isSelected={selectedResourceId === resource.id}
+                        onSelect={() => openResource(resource.id)}
+                        isFavorite={isFavorite(resource.id)}
+                        onToggleFavorite={() => toggleFavorite(resource.id)}
                       />
                     ))}
                   </div>
                 )}
-                {filtered.length === 0 && !fetchingPlaces && (
+                
+                {filteredResources.length === 0 && !placesLoading && (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
                       No resources within {radius} km. Try increasing the radius or searching in a different area.
                     </CardContent>
                   </Card>
                 )}
-                {fetchingPlaces && (
+                
+                {placesLoading && (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
                       Loading nearby places from Google Maps...
@@ -465,139 +254,26 @@ export default function SupportSearch() {
         </TabsContent>
       </Tabs>
 
-      {/* Details Dialog */}
-      <Dialog open={!!selectedResource} onOpenChange={(o) => !o && closeResource()}>
+      {/* Resource Details Dialog */}
+      <Dialog open={!!selectedResource} onOpenChange={(open) => !open && closeResource()}>
         <DialogContent className="max-w-none w-screen h-screen sm:rounded-none p-0 bg-background">
           <div className="flex h-full flex-col">
             <div className="border-b px-4 py-3">
               <DialogHeader>
-                <DialogTitle>Location details</DialogTitle>
+                <DialogTitle>Location Details</DialogTitle>
               </DialogHeader>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-4">
               {selectedResource && <ResourceDetails resource={selectedResource} />}
             </div>
             <div className="border-t px-4 py-3 flex justify-end">
-              <Button variant="outline" onClick={closeResource}>Back</Button>
+              <Button variant="outline" onClick={closeResource}>
+                Back
+              </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
     </section>
-  );
-}
-
-function ResourceCard({ 
-  resource, 
-  isSelected = false, 
-  onSelect,
-  isFavorite = false,
-  onToggleFavorite
-}: { 
-  resource: Resource & { distance?: number };
-  isSelected?: boolean;
-  onSelect?: () => void;
-  isFavorite?: boolean;
-  onToggleFavorite?: () => void;
-}) {
-  const { openWith } = useChat();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-
-  return (
-    <Card 
-      className={`group border border-border/70 hover:border-primary/60 transition-all duration-300 hover:shadow-md cursor-pointer ${
-        isSelected ? 'ring-2 ring-primary' : ''
-      }`}
-      onClick={onSelect}
-    >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <CardTitle className="text-lg leading-tight">
-              {resource.name}
-            </CardTitle>
-            <div className="mt-1 text-sm text-muted-foreground">
-              {resource.city}{resource.state ? `, ${resource.state}` : ""} · {resource.country}
-            </div>
-            {resource.hours && (
-              <AvailabilityStatus hours={resource.hours} className="mb-2" />
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge>{resource.category}</Badge>
-            {onToggleFavorite && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleFavorite();
-                }}
-                className="h-8 w-8 p-0"
-              >
-                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {resource.address && (
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">{resource.address}</span>
-          </div>
-        )}
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          {resource.phone && (
-            <a className="inline-flex items-center gap-1 text-primary hover:underline" href={`tel:${resource.phone}`}>
-              <Phone className="h-4 w-4" /> {resource.phone}
-            </a>
-          )}
-          {resource.website && (
-            <a className="inline-flex items-center gap-1 text-primary hover:underline" href={resource.website} target="_blank" rel="noopener noreferrer">
-              Website <ExternalLink className="h-4 w-4" />
-            </a>
-          )}
-          <a
-            className="inline-flex items-center gap-1 text-primary hover:underline"
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(resource.name + ", " + resource.address + ", " + resource.city)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in Maps <ExternalLink className="h-4 w-4" />
-          </a>
-        </div>
-        <div className="pt-1">
-          <Button size="sm" variant="secondary" onClick={(e) => {
-            e.stopPropagation();
-            openWith({
-              resource: {
-                id: (resource as any).id,
-                name: resource.name,
-                category: String((resource as any).category ?? ""),
-                address: resource.address,
-                city: resource.city,
-                state: (resource as any).state,
-                country: resource.country,
-                phone: (resource as any).phone,
-                website: (resource as any).website,
-                lat: (resource as any).lat,
-                lng: (resource as any).lng,
-              },
-            });
-            navigate("/");
-          }} aria-label="Chat with AI about this location">
-            <MessageSquare className="mr-2 h-4 w-4" /> Chat with AI
-          </Button>
-        </div>
-        {typeof (resource as any).distance === "number" && (
-          <div className="text-sm text-muted-foreground">
-            {(resource as any).distance.toFixed(1)} {t('resource.distance')}
-          </div>
-        )}
-      </CardContent>
-    </Card>
   );
 }

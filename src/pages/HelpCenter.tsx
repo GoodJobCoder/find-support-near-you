@@ -1,41 +1,15 @@
-import { useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useSEO } from "@/hooks/useSEO";
 
 const HelpCenter = () => {
   const { t } = useLanguage();
-  useEffect(() => {
-    // Title
-    const previousTitle = document.title;
-    document.title = "Help Center | CareConnect";
-
-    // Meta description
-    const descContent =
-      "Help Center for CareConnect: FAQs, contact, and guidance for finding cancer support resources near you.";
-    let metaDesc = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
-    if (!metaDesc) {
-      metaDesc = document.createElement("meta");
-      metaDesc.setAttribute("name", "description");
-      document.head.appendChild(metaDesc);
-    }
-    const prevDesc = metaDesc.getAttribute("content") || "";
-    metaDesc.setAttribute("content", descContent);
-
-    // Canonical tag
-    const href = "/help";
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    const prevCanonical = canonical?.href || "";
-    if (!canonical) {
-      canonical = document.createElement("link");
-      canonical.setAttribute("rel", "canonical");
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute("href", href);
-
-    // FAQ JSON-LD
-    const faqScript = document.createElement("script");
-    faqScript.type = "application/ld+json";
-    faqScript.id = "helpcenter-faq-jsonld";
-    faqScript.text = JSON.stringify({
+  
+  // SEO configuration
+  useSEO({
+    title: "Help Center | CareConnect",
+    description: "Help Center for CareConnect: FAQs, contact, and guidance for finding cancer support resources near you.",
+    canonical: "/help",
+    structuredData: {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       mainEntity: [
@@ -44,8 +18,7 @@ const HelpCenter = () => {
           name: "How do I find support resources near me?",
           acceptedAnswer: {
             "@type": "Answer",
-            text:
-              "Use the search on the home page to filter by location and category, then view details for directions and contact info.",
+            text: "Use the search on the home page to filter by location and category, then view details for directions and contact info.",
           },
         },
         {
@@ -53,22 +26,12 @@ const HelpCenter = () => {
           name: "Who can I contact for urgent help?",
           acceptedAnswer: {
             "@type": "Answer",
-            text:
-              "If this is an emergency, call your local emergency number immediately. For urgent medical questions, contact your care team.",
+            text: "If this is an emergency, call your local emergency number immediately. For urgent medical questions, contact your care team.",
           },
         },
       ],
-    });
-    document.head.appendChild(faqScript);
-
-    return () => {
-      document.title = previousTitle;
-      if (metaDesc) metaDesc.setAttribute("content", prevDesc);
-      if (canonical && prevCanonical) canonical.setAttribute("href", prevCanonical);
-      const existingFaq = document.getElementById("helpcenter-faq-jsonld");
-      if (existingFaq) existingFaq.remove();
-    };
-  }, []);
+    }
+  });
 
   return (
     <div>
