@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Globe, ExternalLink, MessageSquare } from "lucide-react";
 import { useChat } from "@/context/ChatContext";
+import { useNavigate } from "react-router-dom";
 
 export default function ResourceDetails({ resource }: { resource: Resource & { distance?: number } }) {
   const { openWith } = useChat();
+  const navigate = useNavigate();
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
@@ -37,7 +39,7 @@ export default function ResourceDetails({ resource }: { resource: Resource & { d
       <div className="flex flex-wrap gap-2 pt-2">
         <Button
           size="sm"
-          onClick={() =>
+          onClick={() => {
             openWith({
               resource: {
                 id: (resource as any).id,
@@ -52,8 +54,9 @@ export default function ResourceDetails({ resource }: { resource: Resource & { d
                 lat: (resource as any).lat,
                 lng: (resource as any).lng,
               },
-            })
-          }
+            });
+            navigate("/");
+          }}
         >
           <span className="inline-flex items-center gap-2">
             <MessageSquare className="h-4 w-4" /> Chat about this location
