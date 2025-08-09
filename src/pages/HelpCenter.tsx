@@ -72,18 +72,22 @@ const HelpCenter = () => {
 
   return (
     <div>
-      <header className="border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-10">
-          <h1 className="text-4xl font-bold tracking-tight">{t('help.title')}</h1>
-          <p className="mt-2 text-muted-foreground max-w-2xl">
-            {t('help.subtitle')}
-          </p>
+      <header className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-[hsl(var(--brand-1))] via-[hsl(var(--brand-3))] to-[hsl(var(--brand-2))] opacity-40" />
+        <div aria-hidden className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-[hsl(var(--brand-1))] opacity-30 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute top-1/3 -right-20 h-72 w-72 rounded-full bg-[hsl(var(--brand-2))] opacity-25 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-12 left-1/3 h-56 w-56 rounded-full bg-[hsl(var(--brand-3))] opacity-30 blur-3xl" />
+        <div className="container mx-auto px-4 py-16 sm:py-24">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">{t('help.title')}</h1>
+            <p className="mt-3 text-muted-foreground max-w-2xl">{t('help.subtitle')}</p>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-10">
-        <section className="grid gap-6 md:grid-cols-2">
-          <article className="rounded-lg border border-border bg-card p-6 shadow-sm">
+        <section className="grid gap-6 md:grid-cols-3">
+          <article className="rounded-lg border border-border bg-card p-8 shadow-sm md:col-span-2 md:row-span-2">
             <h2 className="text-xl font-semibold">{t('help.getting_started')}</h2>
             <p className="mt-2 text-muted-foreground">
               {t('help.getting_started_text')}
