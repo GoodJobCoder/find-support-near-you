@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 
-const CIVIC_API_KEY = "AIzaSyAzsz9MESplaBYwLXhkbXTmagk0ZRs5i2U"; // Provided by user
+const YOUTUBE_API_KEY = "AIzaSyBP30WdSGSW_05zyuMMjs34rWYy3ooLq2k"; // Provided by user
 
-interface CivicDivision {
-  name: string;
-  ocdId: string;
+interface VideoItem {
+  id: string;
+  title: string;
+  thumbnail: string;
+  channelTitle: string;
+  publishedAt?: string;
+  url: string;
 }
 
 interface GovTrackBill {
@@ -23,20 +27,20 @@ interface GovTrackBill {
 const Laws = () => {
   const [q, setQ] = useState("cancer");
   const [loading, setLoading] = useState(false);
-  const [divisions, setDivisions] = useState<CivicDivision[]>([]);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
   const [bills, setBills] = useState<GovTrackBill[]>([]);
   const { toast } = useToast();
 
   useSEO({
-    title: "Cancer Laws & Civic Info | CareConnect",
-    description: "Search cancer-related laws and view relevant civic jurisdictions using Google Civics and federal bills.",
+    title: "Cancer Laws & Debate Videos | CareConnect",
+    description: "Search cancer-related laws and watch debate videos from YouTube alongside recent US federal bills.",
     canonical: "/laws",
     structuredData: {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "Cancer Laws & Civic Info",
+      name: "Cancer Laws & Debate Videos",
       description:
-        "Search cancer-related laws and view relevant civic jurisdictions using Google Civics and federal bills.",
+        "Search cancer-related laws and watch debate videos from YouTube alongside recent US federal bills.",
       potentialAction: {
         "@type": "SearchAction",
         target: "/laws?q={search_term}",
@@ -48,26 +52,38 @@ const Laws = () => {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const civicsUrl = new URL("https://civicinfo.googleapis.com/civicinfo/v2/divisions");
-      civicsUrl.searchParams.set("query", q);
-      civicsUrl.searchParams.set("key", CIVIC_API_KEY);
+      const youtubeUrl = new URL("https://www.googleapis.com/youtube/v3/search");
+      youtubeUrl.searchParams.set("part", "snippet");
+      youtubeUrl.searchParams.set("q", q);
+      youtubeUrl.searchParams.set("type", "video");
+      youtubeUrl.searchParams.set("maxResults", "12");
+      youtubeUrl.searchParams.set("order", "relevance");
+      youtubeUrl.searchParams.set("safeSearch", "strict");
+      youtubeUrl.searchParams.set("key", YOUTUBE_API_KEY);
 
       const govTrackUrl = new URL("https://www.govtrack.us/api/v2/bill");
       govTrackUrl.searchParams.set("q", q);
       govTrackUrl.searchParams.set("sort", "-current_status_date");
       govTrackUrl.searchParams.set("limit", "15");
 
-      const [civicsRes, billsRes] = await Promise.all([
-        fetch(civicsUrl.toString()),
+      const [youtubeRes, billsRes] = await Promise.all([
+        fetch(youtubeUrl.toString()),
         fetch(govTrackUrl.toString()),
       ]);
 
-      if (!civicsRes.ok) throw new Error(`Civics API error ${civicsRes.status}`);
+      if (!youtubeRes.ok) throw new Error(`YouTube API error ${youtubeRes.status}`);
       if (!billsRes.ok) throw new Error(`Bills API error ${billsRes.status}`);
 
-      const civicsData = (await civicsRes.json()) as {
-        kind: string;
-        results?: { name: string; ocdId: string }[];
+      const youtubeData = (await youtubeRes.json()) as {
+        items?: Array<{
+          id: { videoId: string };
+          snippet: {
+            title: string;
+            thumbnails: { medium?: { url: string } };
+            channelTitle: string;
+            publishedAt?: string;
+          };
+        }>;
       };
       const billsData = (await billsRes.json()) as {
         objects: Array<{
@@ -80,8 +96,15 @@ const Laws = () => {
         }>;
       };
 
-      setDivisions(
-        (civicsData.results || []).map((d) => ({ name: d.name, ocdId: d.ocdId }))
+      setVideos(
+        (youtubeData.items || []).map((item) => ({
+          id: item.id.videoId,
+          title: item.snippet.title,
+          thumbnail: item.snippet.thumbnails?.medium?.url || "",
+          channelTitle: item.snippet.channelTitle,
+          publishedAt: item.snippet.publishedAt,
+          url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+        }))
       );
 
       setBills(
@@ -109,7 +132,7 @@ const Laws = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hasResults = useMemo(() => divisions.length > 0 || bills.length > 0, [divisions, bills]);
+  const hasResults = useMemo(() => videos.length > 0 || bills.length > 0, [videos, bills]);
 
   return (
     <div>
@@ -120,9 +143,9 @@ const Laws = () => {
         <div aria-hidden className="pointer-events-none absolute -bottom-12 left-1/3 h-56 w-56 rounded-full bg-[hsl(var(--brand-3))] opacity-30 blur-3xl" />
         <div className="container mx-auto px-4 py-16 sm:py-24">
           <div className="max-w-3xl">
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">Cancer Laws & Civic Info</h1>
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">Cancer Laws & Debate Videos</h1>
             <p className="mt-3 text-muted-foreground max-w-2xl">
-              Search cancer-related laws and view relevant civic jurisdictions. Uses Google Civics for divisions and GovTrack for federal bills.
+              Search cancer-related laws and watch relevant YouTube videos. GovTrack provides recent federal bills.
             </p>
           </div>
         </div>
@@ -145,15 +168,32 @@ const Laws = () => {
 
         <section className="grid gap-6 md:grid-cols-2">
           <article className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-xl font-semibold">Relevant Jurisdictions (Google Civics)</h2>
-            {divisions.length === 0 ? (
-              <p className="text-muted-foreground text-sm mt-2">No matching civic divisions.</p>
+            <h2 className="text-xl font-semibold">YouTube Videos</h2>
+            {videos.length === 0 ? (
+              <p className="text-muted-foreground text-sm mt-2">No videos found.</p>
             ) : (
-              <ul className="mt-3 space-y-2">
-                {divisions.map((d) => (
-                  <li key={d.ocdId} className="rounded-md border border-border p-3">
-                    <div className="font-medium">{d.name}</div>
-                    <div className="text-muted-foreground text-xs">{d.ocdId}</div>
+              <ul className="mt-3 space-y-3">
+                {videos.map((v) => (
+                  <li key={v.id} className="rounded-md border border-border p-3">
+                    <a
+                      href={v.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex gap-3"
+                    >
+                      <img
+                        src={v.thumbnail}
+                        alt={`YouTube video: ${v.title}`}
+                        className="h-20 w-32 object-cover rounded"
+                        loading="lazy"
+                      />
+                      <div className="min-w-0">
+                        <div className="font-medium hover:underline truncate">{v.title}</div>
+                        <div className="text-muted-foreground text-xs mt-1">
+                          {v.channelTitle}{v.publishedAt ? ` • ${new Date(v.publishedAt).toLocaleDateString()}` : ""}
+                        </div>
+                      </div>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -184,7 +224,7 @@ const Laws = () => {
               </ul>
             )}
             <p className="text-muted-foreground text-xs mt-4">
-              Note: Google Civics API does not provide law text; bills sourced from GovTrack.
+              Videos provided by YouTube Data API; bills sourced from GovTrack.
             </p>
           </article>
         </section>
