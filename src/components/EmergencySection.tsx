@@ -4,17 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Phone, Globe, Clock, AlertTriangle } from 'lucide-react';
 import { emergencyResources } from '@/data/emergencyResources';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function EmergencySection() {
+  const { t } = useLanguage();
   return (
     <Card className="border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
           <AlertTriangle className="h-5 w-5" />
-          Emergency Support
+          {t('emergency.title')}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          If you're in crisis or need immediate support, these resources are available 24/7 or with extended hours.
+          {t('emergency.description')}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -42,7 +44,7 @@ export default function EmergencySection() {
                 <Button asChild variant="outline" size="sm">
                   <a href={resource.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">
                     <Globe className="h-4 w-4" />
-                    Website
+                    {t('emergency.website')}
                   </a>
                 </Button>
               )}

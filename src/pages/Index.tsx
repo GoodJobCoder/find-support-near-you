@@ -1,6 +1,8 @@
 import SupportSearch from "@/components/SupportSearch";
+import { useLanguage } from "@/context/LanguageContext";
 
 const Index = () => {
+  const { t } = useLanguage();
   return (
     <div>
       <header className="relative min-h-screen overflow-hidden">
@@ -12,10 +14,10 @@ const Index = () => {
         <div className="container relative z-10 flex min-h-screen flex-col items-center justify-center py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             <h1 className="text-5xl sm:text-6xl font-bold tracking-tight">
-              Find Cancer Support Near You
+              {t('main.heading')}
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Discover nearby support groups, treatment centers, counseling, and resources tailored to your journey.
+              {t('main.subtitle')}
             </p>
           </div>
           <div className="mx-auto mt-10 max-w-4xl w-full">
@@ -26,7 +28,7 @@ const Index = () => {
           <div className="mx-auto mt-8 max-w-4xl">
             <article className="rounded-lg border border-border/70 bg-card/80 backdrop-blur-sm p-6 leading-relaxed text-sm text-muted-foreground">
               <p>
-                This tool helps you quickly locate trusted cancer support organizations around you. Use your current location or search by city/postcode, then filter by category and distance.
+                {t('main.footnote')}
               </p>
             </article>
           </div>

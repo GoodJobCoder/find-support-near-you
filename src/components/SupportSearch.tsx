@@ -172,11 +172,11 @@ export default function SupportSearch() {
                 {userLocation ? (
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    Location set. Showing results within {radius} km.
-                    {placesLoading && ' • Loading nearby places...'}
+                    {t('status.location_set').replace('{radius}', radius.toString())}
+                    {placesLoading && ` • ${t('status.loading_places')}`}
                   </div>
                 ) : (
-                  <div>Tip: set your location to see nearby resources.</div>
+                  <div>{t('status.tip_location')}</div>
                 )}
               </div>
             </CardContent>
@@ -188,7 +188,9 @@ export default function SupportSearch() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
-                    {filteredResources.length} result{filteredResources.length === 1 ? '' : 's'} found
+                    {t('status.results_found')
+                      .replace('{count}', filteredResources.length.toString())
+                      .replace('{plural}', filteredResources.length === 1 ? '' : 's')}
                   </p>
                 </div>
                 
@@ -219,7 +221,7 @@ export default function SupportSearch() {
                 {filteredResources.length === 0 && !placesLoading && (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
-                      No resources within {radius} km. Try increasing the radius or searching in a different area.
+                      {t('status.no_results').replace('{radius}', radius.toString())}
                     </CardContent>
                   </Card>
                 )}
@@ -227,7 +229,7 @@ export default function SupportSearch() {
                 {placesLoading && (
                   <Card>
                     <CardContent className="py-8 text-center text-muted-foreground">
-                      Loading nearby places from Google Maps...
+                      {t('status.loading_google')}
                     </CardContent>
                   </Card>
                 )}
@@ -235,7 +237,7 @@ export default function SupportSearch() {
             ) : (
               <Card className="border-dashed">
                 <CardContent className="py-8 text-center text-muted-foreground">
-                  Results will appear here after you set a location.
+                  {t('status.results_appear')}
                 </CardContent>
               </Card>
             )}
@@ -260,7 +262,7 @@ export default function SupportSearch() {
           <div className="flex h-full flex-col">
             <div className="border-b px-4 py-3">
               <DialogHeader>
-                <DialogTitle>Location Details</DialogTitle>
+                <DialogTitle>{t('resource.details')}</DialogTitle>
               </DialogHeader>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -268,7 +270,7 @@ export default function SupportSearch() {
             </div>
             <div className="border-t px-4 py-3 flex justify-end">
               <Button variant="outline" onClick={closeResource}>
-                Back
+                {t('resource.back')}
               </Button>
             </div>
           </div>

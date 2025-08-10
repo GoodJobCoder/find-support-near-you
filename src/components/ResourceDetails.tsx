@@ -103,7 +103,7 @@ export default function ResourceDetails({ resource }: { resource: Resource & { d
       />
 
       <div className="rounded-md border p-3 text-sm text-muted-foreground">
-        Tip: Information may change. Please contact the organization to confirm details.
+        {t('resource.disclaimer')}
       </div>
     </div>
   );

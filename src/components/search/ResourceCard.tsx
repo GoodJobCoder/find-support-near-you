@@ -86,7 +86,7 @@ export function ResourceCard({
                 variant="ghost"
                 onClick={handleFavoriteClick}
                 className="h-8 w-8 p-0"
-                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                aria-label={isFavorite ? t('favorites.remove') : t('favorites.add')}
               >
                 <Heart 
                   className={`h-4 w-4 ${
@@ -126,7 +126,7 @@ export function ResourceCard({
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
             >
-              Website <ExternalLink className="h-4 w-4" />
+              {t('resource.website')} <ExternalLink className="h-4 w-4" />
             </a>
           )}
           
@@ -137,7 +137,7 @@ export function ResourceCard({
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
           >
-            Open in Maps <ExternalLink className="h-4 w-4" />
+            {t('resource.maps')} <ExternalLink className="h-4 w-4" />
           </a>
         </div>
 
@@ -146,9 +146,9 @@ export function ResourceCard({
             size="sm" 
             variant="secondary" 
             onClick={handleChatClick}
-            aria-label="Chat with AI about this location"
+            aria-label={t('resource.chat')}
           >
-            <MessageSquare className="mr-2 h-4 w-4" /> Chat with AI
+            <MessageSquare className="mr-2 h-4 w-4" /> {t('resource.chat')}
           </Button>
         </div>
 

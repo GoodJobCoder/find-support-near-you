@@ -34,7 +34,7 @@ export function SearchFilters({
             <SelectItem value="All">{t('search.all')}</SelectItem>
             {CATEGORIES.slice(1).map((cat) => (
               <SelectItem key={cat} value={cat}>
-                {cat}
+                {t(`category.${cat.toLowerCase().replace(' ', '_')}`)}
               </SelectItem>
             ))}
           </SelectContent>
