@@ -1,8 +1,8 @@
-# Welcome to your Lovable project
+# Care Connect
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/284dd46c-ef6d-4b34-846d-e8603806c1ec
+Created to raise awarness for cancer and find local support for your journey
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -23,10 +23,4 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/284dd46c-ef6d-4b34-846d-e8603806c1ec) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## this is a thing
