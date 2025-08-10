@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { ActionLinks } from "@/components/laws/ActionLinks";
 
 const YOUTUBE_API_KEY = "AIzaSyBP30WdSGSW_05zyuMMjs34rWYy3ooLq2k"; // Provided by user
 
@@ -232,6 +233,8 @@ const Laws = () => {
         {!hasResults && !loading && (
           <p className="text-muted-foreground text-sm">Try another term like "screening" or "tobacco".</p>
         )}
+
+        <ActionLinks />
       </main>
     </div>
   );
