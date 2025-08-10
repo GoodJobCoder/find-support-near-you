@@ -10,11 +10,15 @@ export function ActionLinks() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   const loadMore = () => {
-    setVisibleCount(prev => Math.min(prev + ITEMS_PER_PAGE, actionLinks.length));
+    setVisibleCount((prev) => Math.min(prev + ITEMS_PER_PAGE, actionLinks.length));
+  };
+  const loadLess = () => {
+    setVisibleCount((prev) => Math.max(ITEMS_PER_PAGE, prev - ITEMS_PER_PAGE));
   };
 
   const visibleLinks = actionLinks.slice(0, visibleCount);
   const hasMore = visibleCount < actionLinks.length;
+  const canLoadLess = visibleCount > ITEMS_PER_PAGE;
 
   const getDomainFromUrl = (url: string): string => {
     try {
@@ -76,11 +80,18 @@ export function ActionLinks() {
         ))}
       </div>
 
-      {hasMore && (
-        <div className="text-center">
-          <Button onClick={loadMore} variant="outline" size="lg">
-            Load More ({actionLinks.length - visibleCount} remaining)
-          </Button>
+      {(hasMore || canLoadLess) && (
+        <div className="flex items-center justify-center gap-3">
+          {canLoadLess && (
+            <Button onClick={loadLess} variant="outline" size="lg" aria-label="Load fewer items">
+              Load Less
+            </Button>
+          )}
+          {hasMore && (
+            <Button onClick={loadMore} variant="outline" size="lg" aria-label="Load more items">
+              Load More ({actionLinks.length - visibleCount} remaining)
+            </Button>
+          )}
         </div>
       )}
     </section>

@@ -27,7 +27,7 @@ const HeaderNav = () => {
             {t('nav.help')}
           </NavLink>
           <NavLink to="/laws" className={getLinkClass}>
-            Laws
+            Awareness
           </NavLink>
         </div>
       </div>
